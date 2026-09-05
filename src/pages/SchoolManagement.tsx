@@ -1,8 +1,19 @@
 import { useEffect, useState } from "react";
 import SchoolTable from "../components/SchoolTable";
-import type { Subject, School } from "../types.ts";
+import type { Subject, School, BookType } from "../types.ts";
 
 export default function SchoolManagement() {
+  // =====================================================
+  // BOOK TYPES
+  // =====================================================
+
+  const BOOK_TYPES: BookType[] = [
+    "Textbook",
+    "Parikshabodh",
+    "Practical",
+    "Project",
+  ];
+
   // =====================================================
   // DEFAULT SUBJECTS
   // =====================================================
@@ -143,6 +154,39 @@ export default function SchoolManagement() {
   ];
 
   // =====================================================
+  // NORMALIZE SUBJECTS
+  // =====================================================
+  //
+  // Book itself DOES NOT contain type.
+  //
+  // Type belongs to school.books:
+  //
+  // Subject -> Medium -> Type -> Books
+  //
+  // =====================================================
+
+  const normalizeSubjects = (
+    subjectList: Subject[]
+  ): Subject[] => {
+    return subjectList.map((subject) => ({
+      ...subject,
+
+      mediums: Array.isArray(subject.mediums)
+        ? subject.mediums.map((medium) => ({
+            ...medium,
+
+            books: Array.isArray(medium.books)
+              ? medium.books.map((book) => ({
+                  id: book.id,
+                  name: book.name,
+                }))
+              : [],
+          }))
+        : [],
+    }));
+  };
+
+  // =====================================================
   // SUBJECTS
   // =====================================================
 
@@ -151,7 +195,13 @@ export default function SchoolManagement() {
 
     if (savedSubjects) {
       try {
-        return JSON.parse(savedSubjects);
+        const parsedSubjects = JSON.parse(savedSubjects);
+
+        if (Array.isArray(parsedSubjects)) {
+          return normalizeSubjects(parsedSubjects);
+        }
+
+        return defaultSubjects;
       } catch {
         return defaultSubjects;
       }
@@ -160,7 +210,10 @@ export default function SchoolManagement() {
     return defaultSubjects;
   });
 
-  // Save subjects
+  // =====================================================
+  // SAVE SUBJECTS
+  // =====================================================
+
   useEffect(() => {
     localStorage.setItem(
       "subjects",
@@ -168,26 +221,55 @@ export default function SchoolManagement() {
     );
   }, [subjects]);
 
-  
+  // =====================================================
+  // CREATE EMPTY BOOK ENTRY
+  // =====================================================
+
+  const createEmptyEntry = (type: BookType) => ({
+    date: "",
+    qty: "",
+    type,
+  });
+
+  // =====================================================
+  // CREATE TYPE BOOKS
+  // =====================================================
+  //
+  // For every book we create separate entries for:
+  //
+  // Textbook
+  // Parikshabodh
+  // Practical
+  // Project
+  //
+  // =====================================================
+
+  const createTypeBooks = (bookCount: number) => {
+    const typeBooks: Record<string, any> = {};
+
+    BOOK_TYPES.forEach((type) => {
+      typeBooks[type] = Array.from(
+        { length: bookCount },
+        () => [createEmptyEntry(type)]
+      );
+    });
+
+    return typeBooks;
+  };
+
+  // =====================================================
+  // CREATE GRADE BOOKS
+  // =====================================================
 
   const createGradeBooks = (subjectList: Subject[]) => {
-    const books: any = {};
+    const books: Record<string, any> = {};
 
     subjectList.forEach((subject) => {
       books[subject.name] = {};
 
       subject.mediums.forEach((medium) => {
-        /*
-          Each book gets an ARRAY of entries.
-        */
-
         books[subject.name][medium.name] =
-          medium.books.map(() => [
-            {
-              date: "",
-              qty: "",
-            },
-          ]);
+          createTypeBooks(medium.books.length);
       });
     });
 
@@ -195,18 +277,189 @@ export default function SchoolManagement() {
   };
 
   // =====================================================
+  // CREATE COMPLETE SCHOOL BOOK DATA
+  // =====================================================
+
+  const createSchoolBooks = (subjectList: Subject[]) => {
+    return {
+      "11": createGradeBooks(subjectList),
+      "12": createGradeBooks(subjectList),
+    };
+  };
+
+  // =====================================================
+  // NORMALIZE OLD + NEW SCHOOL DATA
+  // =====================================================
+  //
+  // Old structure:
+  //
+  // grade
+  //   -> subject
+  //      -> medium
+  //         -> books[]
+  //
+  // New structure:
+  //
+  // grade
+  //   -> subject
+  //      -> medium
+  //         -> Textbook[]
+  //         -> Parikshabodh[]
+  //         -> Practical[]
+  //         -> Project[]
+  //
+  // Old data is automatically moved into Textbook.
+  //
+  // =====================================================
+
+  const normalizeSchools = (
+    schoolList: School[]
+  ): School[] => {
+    if (!Array.isArray(schoolList)) {
+      return [];
+    }
+
+    return schoolList.map((school) => {
+      const updatedBooks: any = structuredClone(
+        school.books || {}
+      );
+
+      Object.keys(updatedBooks).forEach((grade) => {
+        const gradeData = updatedBooks[grade];
+
+        if (!gradeData || typeof gradeData !== "object") {
+          return;
+        }
+
+        Object.keys(gradeData).forEach((subjectName) => {
+          const subjectData = gradeData[subjectName];
+
+          if (
+            !subjectData ||
+            typeof subjectData !== "object"
+          ) {
+            return;
+          }
+
+          Object.keys(subjectData).forEach((mediumName) => {
+            const mediumData =
+              subjectData[mediumName];
+
+            // =================================================
+            // OLD DATA FORMAT
+            // =================================================
+            //
+            // mediumData = [
+            //   [{ date, qty }]
+            // ]
+            //
+            // Move this data into Textbook.
+            //
+            if (Array.isArray(mediumData)) {
+              const textbookData =
+                mediumData.map(
+                  (bookEntries: any[]) => {
+                    if (!Array.isArray(bookEntries)) {
+                      return [
+                        createEmptyEntry("Textbook"),
+                      ];
+                    }
+
+                    return bookEntries.map(
+                      (entry: any) => ({
+                        date: entry?.date || "",
+                        qty: entry?.qty || "",
+                        type: "Textbook",
+                      })
+                    );
+                  }
+                );
+
+              subjectData[mediumName] = {
+                Textbook: textbookData,
+                Parikshabodh: mediumData.map(
+                  () => [
+                    createEmptyEntry("Parikshabodh"),
+                  ]
+                ),
+                Practical: mediumData.map(() => [
+                  createEmptyEntry("Practical"),
+                ]),
+                Project: mediumData.map(() => [
+                  createEmptyEntry("Project"),
+                ]),
+              };
+
+              return;
+            }
+
+            // =================================================
+            // NEW DATA FORMAT
+            // =================================================
+
+            if (
+              typeof mediumData === "object" &&
+              mediumData !== null
+            ) {
+              BOOK_TYPES.forEach((type) => {
+                if (
+                  !Array.isArray(
+                    mediumData[type]
+                  )
+                ) {
+                  mediumData[type] = [];
+                }
+
+                mediumData[type] =
+                  mediumData[type].map(
+                    (bookEntries: any[]) => {
+                      if (!Array.isArray(bookEntries)) {
+                        return [
+                          createEmptyEntry(type),
+                        ];
+                      }
+
+                      return bookEntries.map(
+                        (entry: any) => ({
+                          date: entry?.date || "",
+                          qty: entry?.qty || "",
+                          type,
+                        })
+                      );
+                    }
+                  );
+              });
+            }
+          });
+        });
+      });
+
+      return {
+        ...school,
+        books: updatedBooks,
+      };
+    });
+  };
+
+  // =====================================================
   // SCHOOLS
   // =====================================================
 
   const [schools, setSchools] = useState<School[]>(() => {
-    const savedSchools = localStorage.getItem("schools");
+    const savedSchools =
+      localStorage.getItem("schools");
 
     if (savedSchools) {
       try {
-        return JSON.parse(savedSchools);
+        const parsedSchools =
+          JSON.parse(savedSchools);
+
+        if (Array.isArray(parsedSchools)) {
+          return normalizeSchools(parsedSchools);
+        }
       } catch {
-        // If localStorage data is corrupted,
-        // create default school.
+        // Corrupted localStorage data
+        // will be replaced with default data.
       }
     }
 
@@ -217,11 +470,10 @@ export default function SchoolManagement() {
         schoolName: "ABC Public School",
         grade: "11",
 
-        books: {
-          "11": createGradeBooks(subjects),
-          "12": createGradeBooks(subjects),
-        },
-      } as School,
+        books: createSchoolBooks(
+          defaultSubjects
+        ),
+      },
     ];
   });
 
@@ -239,71 +491,135 @@ export default function SchoolManagement() {
   // =====================================================
   // HANDLE DATE + QTY CHANGE
   // =====================================================
+  //
+  // IMPORTANT:
+  //
+  // The selected type is passed here.
+  //
+  // Example:
+  //
+  // Practical
+  // -> books[11][Physics][English Medium][Practical]
+  //
+  // Project
+  // -> books[11][Physics][English Medium][Project]
+  //
+  // They never overwrite each other.
+  //
+  // =====================================================
 
- const handleInputChange = (
-  schoolId: number,
-  grade: string,
-  subjectName: string,
-  mediumName: string,
-  bookIndex: number,
-  entryIndex: number,
-  field: "date" | "qty",
-  value: string
-) => {
-  setSchools((prevSchools) =>
-    prevSchools.map((school) => {
-      if (school.id !== schoolId) {
-        return school;
-      }
+  const handleInputChange = (
+    schoolId: number,
+    grade: string,
+    subjectName: string,
+    mediumName: string,
+    bookIndex: number,
+    entryIndex: number,
+    field: "date" | "qty",
+    value: string,
+    type: BookType
+  ) => {
+    setSchools((prevSchools) =>
+      prevSchools.map((school) => {
+        if (school.id !== schoolId) {
+          return school;
+        }
 
-      const updatedBooks: any = structuredClone(
-        school.books || {}
-      );
+        const updatedBooks: any = structuredClone(
+          school.books || {}
+        );
 
-      // Grade
-      if (!updatedBooks[grade]) {
-        updatedBooks[grade] = {};
-      }
+        // =================================================
+        // GRADE
+        // =================================================
 
-      // Subject
-      if (!updatedBooks[grade][subjectName]) {
-        updatedBooks[grade][subjectName] = {};
-      }
+        if (!updatedBooks[grade]) {
+          updatedBooks[grade] = {};
+        }
 
-      // Medium
-      if (!updatedBooks[grade][subjectName][mediumName]) {
-        updatedBooks[grade][subjectName][mediumName] = [];
-      }
+        // =================================================
+        // SUBJECT
+        // =================================================
 
-      const books =
-        updatedBooks[grade][subjectName][mediumName];
+        if (
+          !updatedBooks[grade][subjectName]
+        ) {
+          updatedBooks[grade][subjectName] = {};
+        }
 
-      // Book
-      if (!books[bookIndex]) {
-        books[bookIndex] = [];
-      }
+        // =================================================
+        // MEDIUM
+        // =================================================
 
-      // Entry
-      if (!books[bookIndex][entryIndex]) {
-        books[bookIndex][entryIndex] = {
-          date: "",
-          qty: "",
+        if (
+          !updatedBooks[grade][subjectName][
+            mediumName
+          ]
+        ) {
+          updatedBooks[grade][subjectName][
+            mediumName
+          ] = {};
+        }
+
+        // =================================================
+        // TYPE
+        // =================================================
+
+        if (
+          !updatedBooks[grade][subjectName][
+            mediumName
+          ][type]
+        ) {
+          updatedBooks[grade][subjectName][
+            mediumName
+          ][type] = [];
+        }
+
+        const typeBooks =
+          updatedBooks[grade][subjectName][
+            mediumName
+          ][type];
+
+        // =================================================
+        // BOOK
+        // =================================================
+
+        if (!typeBooks[bookIndex]) {
+          typeBooks[bookIndex] = [];
+        }
+
+        // =================================================
+        // ENTRY
+        // =================================================
+
+        if (
+          !typeBooks[bookIndex][entryIndex]
+        ) {
+          typeBooks[bookIndex][entryIndex] =
+            createEmptyEntry(type);
+        }
+
+        // =================================================
+        // UPDATE
+        // =================================================
+
+        typeBooks[bookIndex][entryIndex] = {
+          ...typeBooks[bookIndex][entryIndex],
+          [field]: value,
+          type,
         };
-      }
 
-      // Date / Qty update
-      books[bookIndex][entryIndex] = {
-        ...books[bookIndex][entryIndex],
-        [field]: value,
-      };
+        // =================================================
+        // RETURN UPDATED SCHOOL
+        // =================================================
 
-      return {
-        ...school,
-        books: updatedBooks,
-      };
-    })
-  );
-};
+        return {
+          ...school,
+          books: updatedBooks,
+        };
+      })
+    );
+  };
 
   // =====================================================
   // UI

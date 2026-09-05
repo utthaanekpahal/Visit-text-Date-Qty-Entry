@@ -319,529 +319,665 @@ const getFieldValue = (
   // EXPORT
   // ===================================================
 
-  const handleExport = (
-    type: "filled" | "empty"
-  ) => {
-    const rows: any[][] = [];
 
-    // =================================================
-    // HEADER 1 - SUBJECT
-    // =================================================
+const handleExport = (
+  type: "filled" | "empty"
+) => {
+  const rows: any[][] = [];
 
-    const row1: any[] = [
-      "S.No",
-      "Code",
-      "School Name",
-      "Grade",
-    ];
+  // =================================================
+  // HEADER 1 - SUBJECT
+  // =================================================
 
-    subjects.forEach((subject) => {
-      row1.push(subject.name);
+  const row1: any[] = [
+    "S.No",
+    "Code",
+    "School Name",
+    "Grade",
+  ];
 
-      let count = 0;
+  subjects.forEach((subject) => {
+    row1.push(subject.name);
 
-      subject.mediums.forEach((medium) => {
-        count +=
-          medium.books.length * 2;
-      });
+    let count = 0;
+
+    subject.mediums.forEach((medium) => {
+      count += medium.books.length * 2;
+    });
+
+    for (let i = 1; i < count; i++) {
+      row1.push("");
+    }
+  });
+
+  row1.push("Remark");
+
+  rows.push(row1);
+
+  // =================================================
+  // HEADER 2 - MEDIUM
+  // =================================================
+
+  const row2: any[] = [
+    "",
+    "",
+    "",
+    "",
+  ];
+
+  subjects.forEach((subject) => {
+    subject.mediums.forEach((medium) => {
+      row2.push(medium.name);
 
       for (
         let i = 1;
-        i < count;
+        i < medium.books.length * 2;
         i++
       ) {
-        row1.push("");
+        row2.push("");
       }
     });
+  });
 
-    row1.push("Remark");
+  row2.push("");
 
-    rows.push(row1);
+  rows.push(row2);
 
-    // =================================================
-    // HEADER 2 - MEDIUM
-    // =================================================
+  // =================================================
+  // HEADER 3 - BOOK
+  // =================================================
 
-    const row2: any[] = [
-      "",
-      "",
-      "",
-      "",
-    ];
+  const row3: any[] = [
+    "",
+    "",
+    "",
+    "",
+  ];
 
-    subjects.forEach((subject) => {
-      subject.mediums.forEach((medium) => {
-        row2.push(medium.name);
-
-        for (
-          let i = 1;
-          i <
-          medium.books.length * 2;
-          i++
-        ) {
-          row2.push("");
-        }
+  subjects.forEach((subject) => {
+    subject.mediums.forEach((medium) => {
+      medium.books.forEach((book) => {
+        row3.push(book.name);
+        row3.push("");
       });
     });
+  });
 
-    row2.push("");
+  row3.push("");
 
-    rows.push(row2);
+  rows.push(row3);
 
-    // =================================================
-    // HEADER 3 - BOOK
-    // =================================================
+  // =================================================
+  // HEADER 4 - DATE / QTY
+  // =================================================
 
-    const row3: any[] = [
-      "",
-      "",
-      "",
-      "",
-    ];
+  const row4: any[] = [
+    "",
+    "",
+    "",
+    "",
+  ];
 
-    subjects.forEach((subject) => {
-      subject.mediums.forEach((medium) => {
-        medium.books.forEach((book) => {
-          row3.push(book.name);
-          row3.push("");
+  subjects.forEach((subject) => {
+    subject.mediums.forEach((medium) => {
+      medium.books.forEach(() => {
+        row4.push("Date");
+        row4.push("Qty");
+      });
+    });
+  });
+
+  row4.push("");
+
+  rows.push(row4);
+
+  // =================================================
+  // SERIAL NUMBER
+  // =================================================
+
+  let serialNo = 1;
+
+  // =================================================
+  // IMPORTANT:
+  // CLASS 11 AND CLASS 12 EXPORTED SCHOOLS
+  // ALAG-ALAG STORE HONGE
+  // =================================================
+
+  const exportedSchools: Record<"11" | "12", School[]> = {
+    "11": [],
+    "12": [],
+  };
+
+  // =================================================
+  // DATA
+  // =================================================
+
+  schools.forEach((school) => {
+    (
+      ["11", "12"] as const
+    ).forEach((grade) => {
+
+      let hasFilledData = false;
+
+      // =============================================
+      // CHECK DATE / QTY
+      // =============================================
+
+      subjects.forEach((subject) => {
+        subject.mediums.forEach((medium) => {
+          medium.books.forEach(
+            (_, bookIndex) => {
+
+              const date =
+                getFieldValue(
+                  school,
+                  grade,
+                  subject.name,
+                  medium.name,
+                  bookIndex,
+                  "date"
+                );
+
+              const qty =
+                getFieldValue(
+                  school,
+                  grade,
+                  subject.name,
+                  medium.name,
+                  bookIndex,
+                  "qty"
+                );
+
+              if (
+                date.trim() !== "" ||
+                qty.trim() !== ""
+              ) {
+                hasFilledData = true;
+              }
+            }
+          );
         });
       });
+
+      // =============================================
+      // CHECK REMARK
+      // =============================================
+
+      const remark =
+        getRemark(
+          school,
+          grade
+        );
+
+      if (
+        remark.trim() !== ""
+      ) {
+        hasFilledData = true;
+      }
+
+      // =============================================
+      // FILLED FILTER
+      // =============================================
+
+      if (
+        type === "filled" &&
+        !hasFilledData
+      ) {
+        return;
+      }
+
+      // =============================================
+      // EMPTY FILTER
+      // =============================================
+
+      if (
+        type === "empty" &&
+        hasFilledData
+      ) {
+        return;
+      }
+
+      // =============================================
+      // STORE EXPORTED SCHOOL
+      // =============================================
+
+      exportedSchools[grade].push(school);
+
+      // =============================================
+      // SCHOOL ROW
+      // =============================================
+
+      const row: any[] = [
+        serialNo++,
+        school.code ?? "",
+        school.schoolName ?? "",
+        grade,
+      ];
+
+      // =============================================
+      // SUBJECT DATA
+      // =============================================
+
+      subjects.forEach((subject) => {
+        subject.mediums.forEach((medium) => {
+          medium.books.forEach(
+            (_, bookIndex) => {
+
+              const date =
+                getFieldValue(
+                  school,
+                  grade,
+                  subject.name,
+                  medium.name,
+                  bookIndex,
+                  "date"
+                );
+
+              const qty =
+                getFieldValue(
+                  school,
+                  grade,
+                  subject.name,
+                  medium.name,
+                  bookIndex,
+                  "qty"
+                );
+
+              row.push(date);
+              row.push(qty);
+            }
+          );
+        });
+      });
+
+      // =============================================
+      // REMARK
+      // =============================================
+
+      row.push(remark);
+
+      rows.push(row);
     });
+  });
 
-    row3.push("");
+  // =================================================
+  // CLASS TOTAL ROW FUNCTION
+  // =================================================
 
-    rows.push(row3);
+  const addClassTotalRow = (
+    grade: "11" | "12"
+  ) => {
 
-    // =================================================
-    // HEADER 4 - DATE / QTY
-    // =================================================
+    const classSchools =
+      exportedSchools[grade];
 
-    const row4: any[] = [
+    // -----------------------------------------------
+    // TOTAL ROW
+    // -----------------------------------------------
+
+    const totalRow: any[] = [
       "",
       "",
-      "",
-      "",
+      `CLASS ${grade} TOTAL`,
+      grade,
     ];
+
+    // -----------------------------------------------
+    // SUBJECT / MEDIUM / BOOK TOTAL
+    // -----------------------------------------------
 
     subjects.forEach((subject) => {
       subject.mediums.forEach((medium) => {
-        medium.books.forEach(() => {
-          row4.push("Date");
-          row4.push("Qty");
-        });
-      });
-    });
 
-    row4.push("");
+        medium.books.forEach(
+          (_, bookIndex) => {
 
-    rows.push(row4);
+            // DATE COLUMN
+            totalRow.push("Total");
 
-    // =================================================
-    // DATA
-    // =================================================
+            // -----------------------------------------
+            // QTY TOTAL
+            // -----------------------------------------
 
-    let serialNo = 1;
+            let totalQty = 0;
 
-    schools.forEach((school) => {
-      (
-        ["11", "12"] as const
-      ).forEach((grade) => {
-        let hasFilledData = false;
+            classSchools.forEach((school) => {
 
-        // =============================================
-        // CHECK DATE / QTY
-        // =============================================
+              const bookEntries =
+                school.books?.[
+                  grade
+                ]?.[
+                  subject.name
+                ]?.[
+                  medium.name
+                ]?.[
+                  bookIndex
+                ];
 
-        subjects.forEach((subject) => {
-          subject.mediums.forEach(
-            (medium) => {
-              medium.books.forEach(
-                (_, bookIndex) => {
-                  const date =
-                    getFieldValue(
-                      school,
-                      grade,
-                      subject.name,
-                      medium.name,
-                      bookIndex,
-                      "date"
-                    );
+              if (!Array.isArray(bookEntries)) {
+                return;
+              }
+
+              bookEntries.forEach(
+                (entry: any) => {
 
                   const qty =
-                    getFieldValue(
-                      school,
-                      grade,
-                      subject.name,
-                      medium.name,
-                      bookIndex,
-                      "qty"
+                    Number(
+                      entry?.qty || 0
                     );
 
-                  if (
-                    date.trim() !== "" ||
-                    qty.trim() !== ""
-                  ) {
-                    hasFilledData = true;
+                  if (!isNaN(qty)) {
+                    totalQty += qty;
                   }
                 }
               );
-            }
-          );
-        });
-
-        // =============================================
-        // CHECK REMARK
-        // =============================================
-
-        const remark =
-          getRemark(
-            school,
-            grade
-          );
-
-        if (
-          remark.trim() !== ""
-        ) {
-          hasFilledData = true;
-        }
-
-        // =============================================
-        // FILLED FILTER
-        // =============================================
-
-        if (
-          type === "filled" &&
-          !hasFilledData
-        ) {
-          return;
-        }
-
-        // =============================================
-        // EMPTY FILTER
-        // =============================================
-
-        if (
-          type === "empty" &&
-          hasFilledData
-        ) {
-          return;
-        }
-
-        // =============================================
-        // SCHOOL ROW
-        // =============================================
-
-        const row: any[] = [
-          serialNo++,
-          school.code ?? "",
-          school.schoolName ?? "",
-          grade,
-        ];
-
-        // =============================================
-        // SUBJECT DATA
-        // =============================================
-
-        subjects.forEach((subject) => {
-          subject.mediums.forEach(
-            (medium) => {
-              medium.books.forEach(
-                (_, bookIndex) => {
-                  const date =
-                    getFieldValue(
-                      school,
-                      grade,
-                      subject.name,
-                      medium.name,
-                      bookIndex,
-                      "date"
-                    );
-
-                  const qty =
-                    getFieldValue(
-                      school,
-                      grade,
-                      subject.name,
-                      medium.name,
-                      bookIndex,
-                      "qty"
-                    );
-
-                  row.push(date);
-                  row.push(qty);
-                }
-              );
-            }
-          );
-        });
-
-        // =============================================
-        // REMARK
-        // =============================================
-
-        row.push(remark);
-
-        rows.push(row);
-      });
-    });
-
-    // =================================================
-    // NO RECORD
-    // =================================================
-
-    if (rows.length === 4) {
-      alert(
-        type === "filled"
-          ? "No filled Date, Qty or Remark records were found."
-          : "No empty records were found."
-      );
-
-      return;
-    }
-
-    // =================================================
-    // WORKSHEET
-    // =================================================
-
-    const worksheet =
-      XLSX.utils.aoa_to_sheet(rows);
-
-    // =================================================
-    // MERGES
-    // =================================================
-
-    const merges: XLSX.Range[] = [];
-
-    let col = 4;
-
-    subjects.forEach((subject) => {
-      let subjectSize = 0;
-
-      subject.mediums.forEach(
-        (medium) => {
-          subjectSize +=
-            medium.books.length * 2;
-        }
-      );
-
-      // ===============================================
-      // SUBJECT MERGE
-      // ===============================================
-
-      if (subjectSize > 0) {
-        merges.push({
-          s: {
-            r: 0,
-            c: col,
-          },
-          e: {
-            r: 0,
-            c:
-              col +
-              subjectSize -
-              1,
-          },
-        });
-      }
-
-      // ===============================================
-      // MEDIUM MERGE
-      // ===============================================
-
-      let mediumCol = col;
-
-      subject.mediums.forEach(
-        (medium) => {
-          const mediumSize =
-            medium.books.length * 2;
-
-          if (mediumSize > 0) {
-            merges.push({
-              s: {
-                r: 1,
-                c: mediumCol,
-              },
-              e: {
-                r: 1,
-                c:
-                  mediumCol +
-                  mediumSize -
-                  1,
-              },
             });
+
+            totalRow.push(totalQty);
           }
-
-          mediumCol +=
-            mediumSize;
-        }
-      );
-
-      col += subjectSize;
+        );
+      });
     });
 
-    // =================================================
-    // REMARK MERGE
-    // =================================================
+    // -----------------------------------------------
+    // REMARK
+    // -----------------------------------------------
 
-    const remarkColumn = col;
+    totalRow.push("-");
 
-    merges.push({
-      s: {
-        r: 0,
-        c: remarkColumn,
-      },
-      e: {
-        r: 3,
-        c: remarkColumn,
-      },
-    });
+    rows.push(totalRow);
+  };
 
-    worksheet["!merges"] = merges;
+  // =================================================
+  // CLASS 11 TOTAL
+  // =================================================
 
-    // =================================================
-    // TOTAL COLUMNS
-    // =================================================
+  if (
+    exportedSchools["11"].length > 0
+  ) {
+    addClassTotalRow("11");
+  }
 
-    const totalBookColumns =
-      subjects.reduce(
-        (total, subject) => {
-          return (
-            total +
-            subject.mediums.reduce(
-              (
-                mediumTotal,
-                medium
-              ) => {
-                return (
-                  mediumTotal +
-                  medium.books.length * 2
-                );
-              },
-              0
-            )
-          );
+  // =================================================
+  // CLASS 12 TOTAL
+  // =================================================
+
+  if (
+    exportedSchools["12"].length > 0
+  ) {
+    addClassTotalRow("12");
+  }
+
+  // =================================================
+  // NO RECORD
+  // =================================================
+
+  if (rows.length === 4) {
+
+    alert(
+      type === "filled"
+        ? "No filled Date, Qty or Remark records were found."
+        : "No empty records were found."
+    );
+
+    return;
+  }
+
+  // =================================================
+  // WORKSHEET
+  // =================================================
+
+  const worksheet =
+    XLSX.utils.aoa_to_sheet(rows);
+
+  // =================================================
+  // MERGES
+  // =================================================
+
+  const merges: XLSX.Range[] = [];
+
+  let col = 4;
+
+  subjects.forEach((subject) => {
+
+    let subjectSize = 0;
+
+    subject.mediums.forEach(
+      (medium) => {
+        subjectSize +=
+          medium.books.length * 2;
+      }
+    );
+
+    // ===============================================
+    // SUBJECT MERGE
+    // ===============================================
+
+    if (subjectSize > 0) {
+
+      merges.push({
+        s: {
+          r: 0,
+          c: col,
         },
-        0
-      );
-
-    const totalColumns =
-      4 +
-      totalBookColumns +
-      1;
-
-    // =================================================
-    // COLUMN WIDTH
-    // =================================================
-
-    const columnWidths: XLSX.ColInfo[] = [
-      {
-        wch: 8,
-      },
-      {
-        wch: 15,
-      },
-      {
-        wch: 30,
-      },
-      {
-        wch: 10,
-      },
-    ];
-
-    for (
-      let i = 4;
-      i < totalColumns - 1;
-      i++
-    ) {
-      columnWidths.push({
-        wch: 18,
+        e: {
+          r: 0,
+          c:
+            col +
+            subjectSize -
+            1,
+        },
       });
     }
+
+    // ===============================================
+    // MEDIUM MERGE
+    // ===============================================
+
+    let mediumCol = col;
+
+    subject.mediums.forEach(
+      (medium) => {
+
+        const mediumSize =
+          medium.books.length * 2;
+
+        if (mediumSize > 0) {
+
+          merges.push({
+            s: {
+              r: 1,
+              c: mediumCol,
+            },
+            e: {
+              r: 1,
+              c:
+                mediumCol +
+                mediumSize -
+                1,
+            },
+          });
+        }
+
+        mediumCol +=
+          mediumSize;
+      }
+    );
+
+    col += subjectSize;
+  });
+
+  // =================================================
+  // REMARK MERGE
+  // =================================================
+
+  const remarkColumn = col;
+
+  merges.push({
+    s: {
+      r: 0,
+      c: remarkColumn,
+    },
+    e: {
+      r: 3,
+      c: remarkColumn,
+    },
+  });
+
+  worksheet["!merges"] = merges;
+
+  // =================================================
+  // TOTAL COLUMNS
+  // =================================================
+
+  const totalBookColumns =
+    subjects.reduce(
+      (total, subject) => {
+
+        return (
+          total +
+          subject.mediums.reduce(
+            (
+              mediumTotal,
+              medium
+            ) => {
+
+              return (
+                mediumTotal +
+                medium.books.length * 2
+              );
+            },
+            0
+          )
+        );
+      },
+      0
+    );
+
+  const totalColumns =
+    4 +
+    totalBookColumns +
+    1;
+
+  // =================================================
+  // COLUMN WIDTH
+  // =================================================
+
+  const columnWidths: XLSX.ColInfo[] = [
+    {
+      wch: 8,
+    },
+    {
+      wch: 15,
+    },
+    {
+      wch: 30,
+    },
+    {
+      wch: 10,
+    },
+  ];
+
+  for (
+    let i = 4;
+    i < totalColumns - 1;
+    i++
+  ) {
 
     columnWidths.push({
-      wch: 30,
+      wch: 18,
+    });
+  }
+
+  columnWidths.push({
+    wch: 30,
+  });
+
+  worksheet["!cols"] =
+    columnWidths;
+
+  // =================================================
+  // ROW HEIGHT
+  // =================================================
+
+  worksheet["!rows"] = [];
+
+  for (
+    let rowIndex = 4;
+    rowIndex < rows.length;
+    rowIndex++
+  ) {
+
+    const row =
+      rows[rowIndex];
+
+    let maxLines = 1;
+
+    row.forEach((value) => {
+
+      if (
+        value !== null &&
+        value !== undefined
+      ) {
+
+        const text =
+          String(value);
+
+        const lineCount =
+          text.split("\n").length;
+
+        if (
+          lineCount > maxLines
+        ) {
+          maxLines =
+            lineCount;
+        }
+      }
     });
 
-    worksheet["!cols"] =
-      columnWidths;
+    worksheet["!rows"][
+      rowIndex
+    ] = {
+      hpt: Math.max(
+        20,
+        maxLines * 18
+      ),
+    };
+  }
 
-    // =================================================
-    // ROW HEIGHT
-    // =================================================
+  // =================================================
+  // WORKBOOK
+  // =================================================
 
-    worksheet["!rows"] = [];
+  const workbook =
+    XLSX.utils.book_new();
 
-    for (
-      let rowIndex = 4;
-      rowIndex < rows.length;
-      rowIndex++
-    ) {
-      const row =
-        rows[rowIndex];
+  XLSX.utils.book_append_sheet(
+    workbook,
+    worksheet,
+    "School Data"
+  );
 
-      let maxLines = 1;
+  // =================================================
+  // FILE NAME
+  // =================================================
 
-      row.forEach((value) => {
-        if (
-          value !== null &&
-          value !== undefined
-        ) {
-          const text =
-            String(value);
+  const fileName =
+    type === "filled"
+      ? "School_Filled_Report.xlsx"
+      : "School_Empty_Report.xlsx";
 
-          const lineCount =
-            text.split("\n").length;
+  // =================================================
+  // DOWNLOAD
+  // =================================================
 
-          if (
-            lineCount > maxLines
-          ) {
-            maxLines =
-              lineCount;
-          }
-        }
-      });
+  XLSX.writeFile(
+    workbook,
+    fileName
+  );
+};
 
-      worksheet["!rows"][
-        rowIndex
-      ] = {
-        hpt: Math.max(
-          20,
-          maxLines * 18
-        ),
-      };
-    }
 
-    // =================================================
-    // WORKBOOK
-    // =================================================
-
-    const workbook =
-      XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      worksheet,
-      "School Data"
-    );
-
-    // =================================================
-    // FILE NAME
-    // =================================================
-
-    const fileName =
-      type === "filled"
-        ? "School_Filled_Report.xlsx"
-        : "School_Empty_Report.xlsx";
-
-    // =================================================
-    // DOWNLOAD
-    // =================================================
-
-    XLSX.writeFile(
-      workbook,
-      fileName
-    );
-  };
 
   // ===================================================
   // BUTTONS

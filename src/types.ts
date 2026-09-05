@@ -1,6 +1,16 @@
 import type React from "react";
 
 // =====================================================
+// BOOK TYPE
+// =====================================================
+
+export type BookType =
+  | "Textbook"
+  | "Parikshabodh"
+  | "Practical"
+  | "Project";
+
+// =====================================================
 // BOOK
 // =====================================================
 
@@ -42,42 +52,52 @@ export type Grade = "11" | "12";
 export interface BookEntry {
   date: string;
   qty: string;
+  type: BookType;
 }
 
 // =====================================================
-// MEDIUM BOOKS
+// TYPE BOOKS
+// =====================================================
 //
-// One medium can have multiple books.
-// Each book has multiple date/qty entries.
+// Each medium has separate data for:
+// Textbook
+// Parikshabodh
+// Practical
+// Project
 //
 // Example:
 //
-// {
-//   "English Medium": [
-//     [
-//       { date: "12/06/26", qty: "10" },
-//       { date: "13/06/26", qty: "20" }
-//     ],
-//     [
-//       { date: "14/06/26", qty: "15" }
-//     ]
-//   ]
-// }
+// Physics
+//   English Medium
+//      Textbook
+//      Parikshabodh
+//      Practical
+//      Project
 //
-// Outer array = books
-// Inner array = entries of that book
 // =====================================================
 
-export interface MediumBooks {
-  [mediumName: string]: BookEntry[][];
-}
+export type TypeBooks = {
+  [type in BookType]: BookEntry[][];
+};
 
 // =====================================================
 // GRADE BOOKS
 // =====================================================
+//
+// Structure:
+//
+// grade
+//   -> subject
+//      -> medium
+//         -> type
+//            -> books
+//
+// =====================================================
 
 export interface GradeBooks {
-  [subjectName: string]: MediumBooks;
+  [subjectName: string]: {
+    [mediumName: string]: TypeBooks;
+  };
 }
 
 // =====================================================
@@ -103,6 +123,18 @@ export interface School {
   };
 
   // Books
+  //
+  // Structure:
+  //
+  // books
+  //   -> "11" | "12"
+  //      -> Subject
+  //         -> Medium
+  //            -> Textbook
+  //            -> Parikshabodh
+  //            -> Practical
+  //            -> Project
+  //
   books: {
     [grade: string]: GradeBooks;
   };
@@ -117,13 +149,9 @@ export interface SchoolTableProps {
 
   schools: School[];
 
-  setSchools: React.Dispatch<
-    React.SetStateAction<School[]>
-  >;
+  setSchools: React.Dispatch<React.SetStateAction<School[]>>;
 
-  setSubjects: React.Dispatch<
-    React.SetStateAction<Subject[]>
-  >;
+  setSubjects: React.Dispatch<React.SetStateAction<Subject[]>>;
 
   handleInputChange: (
     schoolId: number,
@@ -133,6 +161,7 @@ export interface SchoolTableProps {
     bookIndex: number,
     entryIndex: number,
     field: "date" | "qty",
-    value: string
+    value: string,
+    type: BookType
   ) => void;
 }

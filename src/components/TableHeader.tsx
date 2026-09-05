@@ -1,9 +1,13 @@
+
 import React from "react";
 import { FiTrash2 } from "react-icons/fi";
 import type { Subject, Book } from "../types";
 
 interface TableHeaderProps {
   subjects: Subject[];
+
+  // Selected Type
+  selectedType: string;
 
   setSubjects: React.Dispatch<
     React.SetStateAction<Subject[]>
@@ -25,11 +29,52 @@ interface TableHeaderProps {
 
 export default function TableHeader({
   subjects,
+  selectedType,
   setSubjects,
   deleteSubject,
   deleteMedium,
   deleteBook,
 }: TableHeaderProps) {
+
+  // =====================================================
+  // GET VISIBLE BOOKS
+  // =====================================================
+  // IMPORTANT:
+  // Book ke andar ab "type" nahi hai.
+  //
+  // Type ab school.books ke andar separate branch hai:
+  //
+  // Textbook
+  // Parikshabodh
+  // Practical
+  // Project
+  //
+  // Isliye yahan books ko selectedType ke basis par
+  // filter NAHI karna hai.
+  //
+  // Selected type ka actual data SchoolTable se aayega.
+  // =====================================================
+
+  const getVisibleBooks = (medium: {
+    books: Book[];
+  }) => {
+    return medium.books;
+  };
+
+  // =====================================================
+  // GET VISIBLE MEDIUMS
+  // =====================================================
+
+  const getVisibleMediums = (subject: Subject) => {
+    return subject.mediums
+      .map((medium) => ({
+        ...medium,
+        books: getVisibleBooks(medium),
+      }))
+      .filter(
+        (medium) => medium.books.length > 0
+      );
+  };
 
   // =====================================================
   // UPDATE SUBJECT NAME
@@ -154,7 +199,7 @@ export default function TableHeader({
 
         <th
           rowSpan={4}
-          className="border p-2  min-w-[150px]"
+          className="border p-2 min-w-[150px]"
         >
           School Code
         </th>
@@ -185,15 +230,26 @@ export default function TableHeader({
           Class
         </th>
 
+        {/* ================= SUBJECT ================= */}
+
         {subjects.map((subject) => {
 
+          const visibleMediums =
+            getVisibleMediums(subject);
+
           const subjectColumnCount =
-            subject.mediums.reduce(
+            visibleMediums.reduce(
               (total, medium) =>
                 total +
                 medium.books.length * 2,
               0
             );
+
+          // Selected type change hone par subject
+          // remove nahi hoga.
+          if (subjectColumnCount === 0) {
+            return null;
+          }
 
           return (
             <th
@@ -244,21 +300,22 @@ export default function TableHeader({
           );
         })}
 
-<th
-  rowSpan={4}
-  className="
-    min-w-[180px]
-    border
-    p-2
-    bg-gray-100
-    text-center
-  "
->
-  Remark
-</th>
+        {/* ================= REMARK ================= */}
+
+        <th
+          rowSpan={4}
+          className="
+            min-w-[180px]
+            border
+            p-2
+            bg-gray-100
+            text-center
+          "
+        >
+          Remark
+        </th>
 
       </tr>
-
 
       {/* =================================================
           ROW 2
@@ -268,114 +325,48 @@ export default function TableHeader({
       <tr>
 
         {subjects.map((subject) =>
-          subject.mediums.map((medium) => {
+          getVisibleMediums(subject).map(
+            (medium) => {
 
-            const mediumColumnCount =
-              medium.books.length * 2;
+              const mediumColumnCount =
+                medium.books.length * 2;
 
-            return (
-              <th
-                key={medium.id}
-                colSpan={mediumColumnCount}
-                className="border p-2"
-              >
-
-                <div className="flex justify-center gap-2">
-
-                  {/* Medium Name */}
-
-                  <input
-                    value={medium.name}
-                    onChange={(e) =>
-                      updateMediumName(
-                        subject.name,
-                        medium.name,
-                        e.target.value
-                      )
-                    }
-                    className="
-                      w-32
-                      bg-transparent
-                      text-center
-                      outline-none
-                    "
-                  />
-
-                  {/* Delete Medium */}
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      deleteMedium(
-                        subject.name,
-                        medium.name
-                      )
-                    }
-                    className="hover:scale-110"
-                  >
-                    <FiTrash2
-                      className="text-red-500"
-                    />
-                  </button>
-
-                </div>
-
-              </th>
-            );
-          })
-        )}
-
-      </tr>
-
-      {/* =================================================
-          ROW 3
-          Book
-      ================================================= */}
-
-      <tr>
-
-        {subjects.map((subject) =>
-          subject.mediums.map((medium) =>
-            medium.books.map(
-              (book: Book) => (
-
+              return (
                 <th
-                  key={book.id}
-                  colSpan={2}
+                  key={`${subject.id}-${medium.id}`}
+                  colSpan={mediumColumnCount}
                   className="border p-2"
                 >
 
                   <div className="flex justify-center gap-2">
 
-                    {/* Book Name */}
+                    {/* Medium Name */}
 
                     <input
-                      value={book.name}
+                      value={medium.name}
                       onChange={(e) =>
-                        updateBookName(
+                        updateMediumName(
                           subject.name,
                           medium.name,
-                          book.id,
                           e.target.value
                         )
                       }
                       className="
-                        w-24
+                        w-32
                         bg-transparent
                         text-center
                         outline-none
                       "
                     />
 
-                    {/* Delete Book */}
+                    {/* Delete Medium */}
 
                     <button
                       type="button"
                       onClick={() =>
-                        deleteBook(
+                        deleteMedium(
                           subject.name,
-                          medium.name,
-                          book.id
+                          medium.name
                         )
                       }
                       className="hover:scale-110"
@@ -388,36 +379,110 @@ export default function TableHeader({
                   </div>
 
                 </th>
-
-              )
-            )
+              );
+            }
           )
         )}
 
       </tr>
 
-     
+      {/* =================================================
+          ROW 3
+          Book
+      ================================================= */}
+
       <tr>
 
         {subjects.map((subject) =>
-          subject.mediums.map((medium) =>
-            medium.books.map((book) => (
+          getVisibleMediums(subject).map(
+            (medium) =>
+              medium.books.map(
+                (book: Book) => (
 
-              <React.Fragment
-                key={`${subject.id}-${medium.id}-${book.id}`}
-              >
+                  <th
+                    key={book.id}
+                    colSpan={2}
+                    className="border p-2"
+                  >
 
-                <th className="border p-2">
-                  Date
-                </th>
+                    <div className="flex justify-center gap-2">
 
-                <th className="border p-2">
-                  Qty
-                </th>
+                      {/* Book Name */}
 
-              </React.Fragment>
+                      <input
+                        value={book.name}
+                        onChange={(e) =>
+                          updateBookName(
+                            subject.name,
+                            medium.name,
+                            book.id,
+                            e.target.value
+                          )
+                        }
+                        className="
+                          w-24
+                          bg-transparent
+                          text-center
+                          outline-none
+                        "
+                      />
 
-            ))
+                      {/* Delete Book */}
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          deleteBook(
+                            subject.name,
+                            medium.name,
+                            book.id
+                          )
+                        }
+                        className="hover:scale-110"
+                      >
+                        <FiTrash2
+                          className="text-red-500"
+                        />
+                      </button>
+
+                    </div>
+
+                  </th>
+
+                )
+              )
+          )
+        )}
+
+      </tr>
+
+      {/* =================================================
+          ROW 4
+          Date / Qty
+      ================================================= */}
+
+      <tr>
+
+        {subjects.map((subject) =>
+          getVisibleMediums(subject).map(
+            (medium) =>
+              medium.books.map((book) => (
+
+                <React.Fragment
+                  key={`${subject.id}-${medium.id}-${book.id}`}
+                >
+
+                  <th className="border p-2">
+                    Date
+                  </th>
+
+                  <th className="border p-2">
+                    Qty
+                  </th>
+
+                </React.Fragment>
+
+              ))
           )
         )}
 
