@@ -1,27 +1,16 @@
 import type React from "react";
 
-// =====================================================
-// BOOK TYPE
-// =====================================================
-
 export type BookType =
   | "Textbook"
   | "Parikshabodh"
   | "Practical"
-  | "Project";
-
-// =====================================================
-// BOOK
-// =====================================================
+  | "Project"
+  | "Guide";
 
 export interface Book {
   id: number;
   name: string;
 }
-
-// =====================================================
-// MEDIUM
-// =====================================================
 
 export interface Medium {
   id: number;
@@ -29,25 +18,13 @@ export interface Medium {
   books: Book[];
 }
 
-// =====================================================
-// SUBJECT
-// =====================================================
-
 export interface Subject {
   id: number;
   name: string;
   mediums: Medium[];
 }
 
-// =====================================================
-// GRADE
-// =====================================================
-
 export type Grade = "11" | "12";
-
-// =====================================================
-// DATE + QTY ENTRY
-// =====================================================
 
 export interface BookEntry {
   date: string;
@@ -55,54 +32,15 @@ export interface BookEntry {
   type: BookType;
 }
 
-// =====================================================
-// TYPE BOOKS
-// =====================================================
-//
-// Each medium has separate data for:
-// Textbook
-// Parikshabodh
-// Practical
-// Project
-//
-// Example:
-//
-// Physics
-//   English Medium
-//      Textbook
-//      Parikshabodh
-//      Practical
-//      Project
-//
-// =====================================================
-
 export type TypeBooks = {
   [type in BookType]: BookEntry[][];
 };
-
-// =====================================================
-// GRADE BOOKS
-// =====================================================
-//
-// Structure:
-//
-// grade
-//   -> subject
-//      -> medium
-//         -> type
-//            -> books
-//
-// =====================================================
 
 export interface GradeBooks {
   [subjectName: string]: {
     [mediumName: string]: TypeBooks;
   };
 }
-
-// =====================================================
-// SCHOOL
-// =====================================================
 
 export interface School {
   id: number;
@@ -122,36 +60,23 @@ export interface School {
     "12"?: string;
   };
 
-  // Books
-  //
-  // Structure:
-  //
-  // books
-  //   -> "11" | "12"
-  //      -> Subject
-  //         -> Medium
-  //            -> Textbook
-  //            -> Parikshabodh
-  //            -> Practical
-  //            -> Project
-  //
   books: {
     [grade: string]: GradeBooks;
   };
 }
-
-// =====================================================
-// SCHOOL TABLE PROPS
-// =====================================================
 
 export interface SchoolTableProps {
   subjects: Subject[];
 
   schools: School[];
 
-  setSchools: React.Dispatch<React.SetStateAction<School[]>>;
+  setSchools: React.Dispatch<
+    React.SetStateAction<School[]>
+  >;
 
-  setSubjects: React.Dispatch<React.SetStateAction<Subject[]>>;
+  setSubjects: React.Dispatch<
+    React.SetStateAction<Subject[]>
+  >;
 
   handleInputChange: (
     schoolId: number,

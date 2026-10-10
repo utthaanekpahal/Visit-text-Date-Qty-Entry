@@ -8,14 +8,14 @@ interface TableHeaderProps {
 
   // Selected Type
   selectedType: string;
-
+   
   setSubjects: React.Dispatch<
     React.SetStateAction<Subject[]>
   >;
 
   deleteSubject: (subjectName: string) => void;
 
-  deleteMedium: (
+  deleteMedium: ( 
     subjectName: string,
     mediumName: string
   ) => void;

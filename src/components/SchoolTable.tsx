@@ -5,6 +5,7 @@ import type {
   Subject,
   School,
   Book,
+  Medium,
   BookType,
   Grade,
 } from "../types";
@@ -34,6 +35,7 @@ const BOOK_TYPES: BookType[] = [
   "Parikshabodh",
   "Practical",
   "Project",
+  "Guide"
 ];
 
 export default function SchoolTable({
@@ -72,12 +74,7 @@ export default function SchoolTable({
     }
   }, [subjects, selectedSubject]);
 
-  // =====================================================
-  // WHEN TYPE = ALL
-  // We keep Textbook as the displayed data branch.
-  // Because one table cell cannot display 4 independent
-  // date/qty datasets at the same time.
-  // =====================================================
+
 
   const activeType: BookType =
     selectedType === "All"
@@ -287,319 +284,484 @@ export default function SchoolTable({
   // ADD SUBJECT
   // =====================================================
 
-  const addSubject = () => {
-    const subjectNameInput =
-      prompt("Enter Subject Name");
+ const addSubject = () => {
+  // =====================================================
+  // STEP 1: MAIN SUBJECT
+  // =====================================================
 
-    if (!subjectNameInput?.trim()) {
-      return;
-    }
+  const subjectNameInput =
+    prompt("Enter Main Subject");
 
-    const subjectName =
-      subjectNameInput.trim();
+  if (subjectNameInput === null) {
+    return;
+  }
 
-    const mediumNames = [
-      "English Medium",
-      "Hindi Medium",
-    ];
+  const subjectName =
+    subjectNameInput.trim();
 
-    const bookInput = prompt(
-      "Enter Book Names separated by comma"
-    );
+  if (!subjectName) {
+    alert("Subject name is required.");
+    return;
+  }
 
-    if (!bookInput) return;
+  // =====================================================
+  // STEP 2: ENGLISH MEDIUM SUB SUBJECTS
+  // =====================================================
 
-    const bookNames = bookInput
+  const englishInput = prompt(
+    "Enter English Medium Sub Subjects\n\n" +
+      "Example: Physics, Chemistry, Biology\n\n" +
+      "Click Cancel if you don't want English Medium."
+  );
+
+  let englishBooks: string[] = [];
+
+  if (englishInput !== null) {
+    englishBooks = englishInput
       .split(",")
-      .map((name) => name.trim())
+      .map((name: string) => name.trim())
       .filter(
-        (name) => name !== ""
+        (name: string) => name !== ""
       );
+  }
 
-    if (bookNames.length === 0) {
-      return;
-    }
+  // =====================================================
+  // STEP 3: HINDI MEDIUM SUB SUBJECTS
+  // =====================================================
 
+  const hindiInput = prompt(
+    "Enter Hindi Medium Sub Subjects\n\n" +
+      "Example: Bhautik, Rasayan, Jeev Vigyan\n\n" +
+      "Click Cancel if you don't want Hindi Medium."
+  );
+
+  let hindiBooks: string[] = [];
+
+  if (hindiInput !== null) {
+    hindiBooks = hindiInput
+      .split(",")
+      .map((name: string) => name.trim())
+      .filter(
+        (name: string) => name !== ""
+      );
+  }
+
+  // =====================================================
+  // AT LEAST ONE MEDIUM REQUIRED
+  // =====================================================
+
+  if (
+    englishBooks.length === 0 &&
+    hindiBooks.length === 0
+  ) {
+    alert(
+      "Please enter at least one medium sub subject."
+    );
+    return;
+  }
+
+  // =====================================================
+  // CREATE MEDIUM DATA
+  // =====================================================
+
+  const mediumData: Medium[] = [];
+
+  // =====================================================
+  // ENGLISH MEDIUM
+  // =====================================================
+
+  if (englishBooks.length > 0) {
     const books: Book[] =
-      bookNames.map(
-        (bookName, index) => ({
-          id: Date.now() + index,
+      englishBooks.map(
+        (
+          bookName: string,
+          index: number
+        ) => ({
+          id:
+            Date.now() +
+            index,
+
           name: bookName,
         })
       );
 
-    // =====================================================
-    // CHECK EXISTING SUBJECT
-    // =====================================================
+    mediumData.push({
+      id: Date.now(),
 
-    const existingSubject =
-      subjects.find(
-        (s) =>
-          s.name.toLowerCase() ===
-          subjectName.toLowerCase()
-      );
+      name: "English Medium",
 
-    // =====================================================
-    // EXISTING SUBJECT
-    // =====================================================
+      books,
+    });
+  }
 
-    if (existingSubject) {
-      // =========================================
-      // UPDATE SUBJECT STRUCTURE
-      // =========================================
+  // =====================================================
+  // HINDI MEDIUM
+  // =====================================================
 
-      setSubjects((prev) =>
-        prev.map((subject) => {
-          if (
-            subject.name !==
-            existingSubject.name
-          ) {
-            return subject;
-          }
+  if (hindiBooks.length > 0) {
+    const books: Book[] =
+      hindiBooks.map(
+        (
+          bookName: string,
+          index: number
+        ) => ({
+          id:
+            Date.now() +
+            1000 +
+            index,
 
-          const updatedMediums = [
-            ...subject.mediums,
-          ];
-
-          mediumNames.forEach(
-            (mediumName) => {
-              const index =
-                updatedMediums.findIndex(
-                  (medium) =>
-                    medium.name.toLowerCase() ===
-                    mediumName.toLowerCase()
-                );
-
-              if (index >= 0) {
-                updatedMediums[index] = {
-                  ...updatedMediums[index],
-
-                  books: [
-                    ...updatedMediums[index]
-                      .books,
-                    ...books,
-                  ],
-                };
-              } else {
-                updatedMediums.push({
-                  id:
-                    Date.now() +
-                    Math.random(),
-
-                  name: mediumName,
-
-                  books: [...books],
-                });
-              }
-            }
-          );
-
-          return {
-            ...subject,
-            mediums: updatedMediums,
-          };
+          name: bookName,
         })
       );
 
-      // =========================================
-      // UPDATE SCHOOL BOOK DATA
-      // =========================================
+    mediumData.push({
+      id:
+        Date.now() +
+        1000,
 
-      setSchools((prev) =>
-        prev.map((school) => {
-          const updatedBooks =
-            structuredClone(
-              school.books || {}
-            );
+      name: "Hindi Medium",
 
-          (["11", "12"] as const).forEach(
-            (grade) => {
-              // =================================
-              // GRADE
-              // =================================
+      books,
+    });
+  }
 
-              if (
-                !updatedBooks[grade]
-              ) {
-                updatedBooks[grade] =
-                  {};
-              }
+  // =====================================================
+  // CHECK EXISTING SUBJECT
+  // =====================================================
 
-              // =================================
-              // IMPORTANT:
-              // USE ORIGINAL SUBJECT NAME
-              // =================================
+  const existingSubject =
+    subjects.find(
+      (subject) =>
+        subject.name.toLowerCase() ===
+        subjectName.toLowerCase()
+    );
 
-              const schoolSubjectName =
-                existingSubject.name;
+  // =====================================================
+  // EXISTING SUBJECT
+  // =====================================================
 
-              if (
-                !updatedBooks[grade][
-                  schoolSubjectName
-                ]
-              ) {
-                updatedBooks[grade][
-                  schoolSubjectName
-                ] = {};
-              }
+  if (existingSubject) {
 
-              // =================================
-              // MEDIUM
-              // =================================
+    // ===================================================
+    // UPDATE SUBJECT STRUCTURE
+    // ===================================================
 
-              mediumNames.forEach(
-                (mediumName) => {
-                  if (
-                    !updatedBooks[
-                      grade
-                    ][
-                      schoolSubjectName
-                    ][mediumName]
-                  ) {
-                    updatedBooks[
-                      grade
-                    ][
-                      schoolSubjectName
-                    ][mediumName] =
-                      createTypeBooks(
-                        []
-                      );
-                  }
+    setSubjects((prev) =>
+      prev.map((subject) => {
 
-                  // =================================
-                  // ADD NEW BOOKS TO ALL 4 TYPES
-                  // =================================
+        if (
+          subject.name !==
+          existingSubject.name
+        ) {
+          return subject;
+        }
 
-                  BOOK_TYPES.forEach(
-                    (type) => {
-                      const oldBooks =
-                        updatedBooks[
-                          grade
-                        ][
-                          schoolSubjectName
-                        ][
-                          mediumName
-                        ][type] || [];
+        const updatedMediums = [
+          ...subject.mediums,
+        ];
 
-                      const newBooks =
-                        books.map(
-                          () => [
-                            {
-                              date: "",
-                              qty: "",
-                              type,
-                            },
-                          ]
-                        );
+        mediumData.forEach(
+          (newMedium) => {
 
+            const mediumIndex =
+              updatedMediums.findIndex(
+                (medium) =>
+                  medium.name.toLowerCase() ===
+                  newMedium.name.toLowerCase()
+              );
+
+            // =========================================
+            // MEDIUM ALREADY EXISTS
+            // =========================================
+
+            if (mediumIndex >= 0) {
+
+              updatedMediums[
+                mediumIndex
+              ] = {
+                ...updatedMediums[
+                  mediumIndex
+                ],
+
+                books: [
+                  ...updatedMediums[
+                    mediumIndex
+                  ].books,
+
+                  ...newMedium.books,
+                ],
+              };
+
+            }
+
+            // =========================================
+            // NEW MEDIUM
+            // =========================================
+
+            else {
+
+              updatedMediums.push({
+                id: newMedium.id,
+
+                name: newMedium.name,
+
+                books: [
+                  ...newMedium.books,
+                ],
+              });
+
+            }
+          }
+        );
+
+        return {
+          ...subject,
+
+          mediums:
+            updatedMediums,
+        };
+      })
+    );
+
+    // ===================================================
+    // UPDATE SCHOOL BOOK DATA
+    // ===================================================
+
+    setSchools((prev) =>
+      prev.map((school) => {
+
+        const updatedBooks =
+          structuredClone(
+            school.books || {}
+          );
+
+        // =================================================
+        // CLASS 11 AND CLASS 12
+        // =================================================
+
+        (["11", "12"] as const).forEach(
+          (grade) => {
+
+            // =============================================
+            // CREATE GRADE
+            // =============================================
+
+            if (
+              !updatedBooks[grade]
+            ) {
+              updatedBooks[grade] =
+                {};
+            }
+
+            // =============================================
+            // ORIGINAL SUBJECT NAME
+            // =============================================
+
+            const schoolSubjectName =
+              existingSubject.name;
+
+            // =============================================
+            // CREATE SUBJECT
+            // =============================================
+
+            if (
+              !updatedBooks[
+                grade
+              ][schoolSubjectName]
+            ) {
+              updatedBooks[
+                grade
+              ][schoolSubjectName] =
+                {};
+            }
+
+            // =============================================
+            // EACH MEDIUM
+            // =============================================
+
+            mediumData.forEach(
+              (medium) => {
+
+                const mediumName =
+                  medium.name;
+
+                const books =
+                  medium.books;
+
+                // =======================================
+                // CREATE MEDIUM
+                // =======================================
+
+                if (
+                  !updatedBooks[
+                    grade
+                  ][
+                    schoolSubjectName
+                  ][mediumName]
+                ) {
+                  updatedBooks[
+                    grade
+                  ][
+                    schoolSubjectName
+                  ][mediumName] =
+                    createTypeBooks([]);
+                }
+
+                // =======================================
+                // ADD BOOKS TO ALL BOOK TYPES
+                // =======================================
+
+                BOOK_TYPES.forEach(
+                  (type) => {
+
+                    const oldBooks =
                       updatedBooks[
                         grade
                       ][
                         schoolSubjectName
                       ][
                         mediumName
-                      ][type] = [
-                        ...oldBooks,
-                        ...newBooks,
-                      ];
-                    }
-                  );
-                }
-              );
-            }
-          );
+                      ][type] || [];
 
-          return {
-            ...school,
-            books: updatedBooks,
-          };
-        })
-      );
-    }
-
-    // =====================================================
-    // NEW SUBJECT
-    // =====================================================
-
-    else {
-      const newSubject: Subject = {
-        id: Date.now(),
-
-        name: subjectName,
-
-        mediums: mediumNames.map(
-          (medium, index) => ({
-            id:
-              Date.now() + index,
-
-            name: medium,
-
-            books: [...books],
-          })
-        ),
-      };
-
-      // =========================================
-      // ADD SUBJECT
-      // =========================================
-
-      setSubjects((prev) => [
-        ...prev,
-        newSubject,
-      ]);
-
-      // =========================================
-      // UPDATE SCHOOL BOOK DATA
-      // =========================================
-
-      setSchools((prev) =>
-        prev.map((school) => {
-          const updatedBooks =
-            structuredClone(
-              school.books || {}
+                    // BookEntry[]
+                 const newBooks = books.map(() => [
+  {
+    date: "",
+    qty: "",
+    type,
+  },
+]);
+                    // IMPORTANT:
+                    // oldBooks + newBooks
+                    updatedBooks[
+                      grade
+                    ][
+                      schoolSubjectName
+                    ][
+                      mediumName
+                    ][type] = [
+                      ...oldBooks,
+                      ...newBooks,
+                    ];
+                  }
+                );
+              }
             );
+          }
+        );
 
-          (["11", "12"] as const).forEach(
-            (grade) => {
-              if (
-                !updatedBooks[grade]
-              ) {
-                updatedBooks[grade] =
-                  {};
-              }
+        return {
+          ...school,
 
-              if (
-                !updatedBooks[grade][
-                  subjectName
-                ]
-              ) {
-                updatedBooks[grade][
-                  subjectName
-                ] = {};
-              }
+          books:
+            updatedBooks,
+        };
+      })
+    );
+  }
 
-              mediumNames.forEach(
-                (mediumName) => {
-                  updatedBooks[
-                    grade
-                  ][subjectName][
-                    mediumName
-                  ] = createTypeBooks(
-                    books
-                  );
-                }
-              );
-            }
+  // =====================================================
+  // NEW SUBJECT
+  // =====================================================
+
+  else {
+
+    // ===================================================
+    // CREATE NEW SUBJECT
+    // ===================================================
+
+    const newSubject: Subject = {
+      id: Date.now(),
+
+      name: subjectName,
+
+      mediums: mediumData,
+    };
+
+    // ===================================================
+    // ADD SUBJECT
+    // ===================================================
+
+    setSubjects((prev) => [
+      ...prev,
+
+      newSubject,
+    ]);
+
+    // ===================================================
+    // UPDATE SCHOOL DATA
+    // ===================================================
+
+    setSchools((prev) =>
+      prev.map((school) => {
+
+        const updatedBooks =
+          structuredClone(
+            school.books || {}
           );
 
-          return {
-            ...school,
-            books: updatedBooks,
-          };
-        })
-      );
-    }
-  };
+        // =================================================
+        // CLASS 11 + CLASS 12
+        // =================================================
+
+        (["11", "12"] as const).forEach(
+          (grade) => {
+
+            // =============================================
+            // CREATE GRADE
+            // =============================================
+
+            if (
+              !updatedBooks[grade]
+            ) {
+              updatedBooks[grade] =
+                {};
+            }
+
+            // =============================================
+            // CREATE SUBJECT
+            // =============================================
+
+            if (
+              !updatedBooks[
+                grade
+              ][subjectName]
+            ) {
+              updatedBooks[
+                grade
+              ][subjectName] =
+                {};
+            }
+
+            // =============================================
+            // CREATE MEDIUM DATA
+            // =============================================
+
+            mediumData.forEach(
+              (medium) => {
+
+                updatedBooks[
+                  grade
+                ][subjectName][
+                  medium.name
+                ] = createTypeBooks(
+                  medium.books
+                );
+              }
+            );
+          }
+        );
+
+        return {
+          ...school,
+
+          books:
+            updatedBooks,
+        };
+      })
+    );
+  }
+};
 
   // =====================================================
   // DELETE BOOK
@@ -1091,35 +1253,35 @@ export default function SchoolTable({
         </select>
 
         {/* TYPE FILTER */}
-        <select
-          value={selectedType}
-          onChange={(e) =>
-            setSelectedType(
-              e.target.value
-            )
-          }
-          className="border rounded px-3 py-2 ml-3"
-        >
-          <option value="All">
-            All Types
-          </option>
+       <select
+  value={selectedType}
+  onChange={(e) => setSelectedType(e.target.value)}
+  className="border rounded px-3 py-2 ml-3"
+>
+  <option value="All">
+    All Types
+  </option>
 
-          <option value="Textbook">
-            Textbook
-          </option>
+  <option value="Textbook">
+    Textbook
+  </option>
 
-          <option value="Parikshabodh">
-            Parikshabodh
-          </option>
+  <option value="Parikshabodh">
+    Parikshabodh
+  </option>
 
-          <option value="Practical">
-            Practical
-          </option>
+  <option value="Practical">
+    Practical
+  </option>
 
-          <option value="Project">
-            Project
-          </option>
-        </select>
+  <option value="Project">
+    Project
+  </option>
+
+  <option value="Guide">
+    Guide
+  </option>
+</select>
 
         {/* CLASS FILTER */}
         <select
@@ -1148,27 +1310,29 @@ export default function SchoolTable({
         <div className="flex gap-3">
           <button
             onClick={addSchool}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+            className="bg-pink-600 hover:bg-green-700 text-white px-4 py-2 rounded text-xl font-bold"
           >
             + Add School
           </button>
 
           <button
             onClick={addSubject}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+            className="bg-pink-600 text-xl font-bold hover:bg-blue-700 text-white px-4 py-2 rounded"
           >
             + Add Subject
           </button>
 
           <ImportExcel
-            setSchools={setSchools}
-            subjects={subjects}
-          />
+  setSchools={setSchools}
+  subjects={subjects}
+  selectedType={activeType}
+/>
 
           <ExportExcel
-            schools={schools}
-            subjects={subjects}
-          />
+  schools={schools}
+  subjects={subjects}
+  selectedType={activeType}
+/>
         </div>
       </div>
 

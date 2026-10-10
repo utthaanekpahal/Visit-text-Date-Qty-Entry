@@ -3,167 +3,171 @@ import SchoolTable from "../components/SchoolTable";
 import type { Subject, School, BookType } from "../types.ts";
 
 export default function SchoolManagement() {
-  // =====================================================
-  // BOOK TYPES
-  // =====================================================
+
 
   const BOOK_TYPES: BookType[] = [
     "Textbook",
     "Parikshabodh",
     "Practical",
     "Project",
+    "Guide"
   ];
 
-  // =====================================================
-  // DEFAULT SUBJECTS
-  // =====================================================
+ 
 
-  const defaultSubjects: Subject[] = [
-    {
-      id: 1,
-      name: "Science",
-      mediums: [
-        {
-          id: 1,
-          name: "English Medium",
-          books: [
-            { id: 1, name: "Physics" },
-            { id: 2, name: "Chemistry" },
-            { id: 3, name: "Biology" },
-            { id: 4, name: "Mathematics" },
-          ],
-        },
-        {
-          id: 2,
-          name: "Hindi Medium",
-          books: [
-            { id: 1, name: "Physics" },
-            { id: 2, name: "Chemistry" },
-            { id: 3, name: "Biology" },
-            { id: 4, name: "Mathematics" },
-          ],
-        },
-      ],
-    },
+ const defaultSubjects: Subject[] = [
+  {
+    id: 1,
+    name: "Science",
 
-    {
-      id: 2,
-      name: "Commerce",
-      mediums: [
-        {
-          id: 1,
-          name: "English Medium",
-          books: [
-            { id: 1, name: "Business Studies" },
-            { id: 2, name: "Accountancy" },
-            { id: 3, name: "Economics" },
-            { id: 4, name: "Bookkeeping" },
-          ],
-        },
-        {
-          id: 2,
-          name: "Hindi Medium",
-          books: [
-            { id: 1, name: "Business Studies" },
-            { id: 2, name: "Accountancy" },
-            { id: 3, name: "Economics" },
-            { id: 4, name: "Bookkeeping" },
-          ],
-        },
-      ],
-    },
+    mediums: [
+      {
+        id: 1,
+        name: "English Medium",
 
-    {
-      id: 3,
-      name: "Arts",
-      mediums: [
-        {
-          id: 1,
-          name: "English Medium",
-          books: [
-            { id: 1, name: "Political Science" },
-            { id: 2, name: "Geography" },
-            { id: 3, name: "History" },
-            { id: 4, name: "Economics" },
-            { id: 5, name: "Sociology" },
-          ],
-        },
-        {
-          id: 2,
-          name: "Hindi Medium",
-          books: [
-            { id: 1, name: "Political Science" },
-            { id: 2, name: "Geography" },
-            { id: 3, name: "History" },
-            { id: 4, name: "Economics" },
-            { id: 5, name: "Sociology" },
-          ],
-        },
-      ],
-    },
+        books: [
+          { id: 1, name: "Physics" },
+          { id: 2, name: "Chemistry" },
+          { id: 3, name: "Biology" },
+          { id: 4, name: "Mathematics" },
+        ],
+      },
 
-    {
-      id: 4,
-      name: "Agriculture",
-      mediums: [
-        {
-          id: 1,
-          name: "English Medium",
-          books: [
-            { id: 1, name: "Horticulture" },
-            { id: 2, name: "Animal Husbandry" },
-            { id: 3, name: "Crop Production" },
-          ],
-        },
-        {
-          id: 2,
-          name: "Hindi Medium",
-          books: [
-            { id: 1, name: "Horticulture" },
-            { id: 2, name: "Animal Husbandry" },
-            { id: 3, name: "Crop Production" },
-          ],
-        },
-      ],
-    },
+      {
+        id: 2,
+        name: "Hindi Medium",
 
-    {
-      id: 5,
-      name: "Bharati",
-      mediums: [
-        {
-          id: 1,
-          name: "English Medium",
-          books: [
-            { id: 1, name: "Hindi" },
-            { id: 2, name: "English" },
-            { id: 3, name: "Sanskrit" },
-          ],
-        },
-        {
-          id: 2,
-          name: "Hindi Medium",
-          books: [
-            { id: 1, name: "Hindi" },
-            { id: 2, name: "English" },
-            { id: 3, name: "Sanskrit" },
-          ],
-        },
-      ],
-    },
-  ];
+        books: [
+          { id: 1, name: "Bhautik" },
+          { id: 2, name: "Rasayan" },
+          { id: 3, name: "Jeev Vigyan" },
+          { id: 4, name: "Ganit" },
+        ],
+      },
+    ],
+  },
 
-  // =====================================================
-  // NORMALIZE SUBJECTS
-  // =====================================================
-  //
-  // Book itself DOES NOT contain type.
-  //
-  // Type belongs to school.books:
-  //
-  // Subject -> Medium -> Type -> Books
-  //
-  // =====================================================
+  {
+    id: 2,
+    name: "Commerce",
+
+    mediums: [
+      {
+        id: 3,
+        name: "English Medium",
+
+        books: [
+          { id: 1, name: "Business Studies" },
+          { id: 2, name: "Accountancy" },
+          { id: 3, name: "Economics" },
+        ],
+      },
+
+      {
+        id: 4,
+        name: "Hindi Medium",
+
+        books: [
+          { id: 1, name: "Vyavsay Adhyayan" },
+          { id: 2, name: "Lekhashastra" },
+          { id: 3, name: "Arthashastra" },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 3,
+    name: "Arts",
+
+    mediums: [
+      {
+        id: 5,
+        name: "English Medium",
+
+        books: [
+          { id: 1, name: "Political Science" },
+          { id: 2, name: "Geography" },
+          { id: 3, name: "History" },
+          { id: 4, name: "Economics" },
+          { id: 5, name: "Sociology" },
+        ],
+      },
+
+      {
+        id: 6,
+        name: "Hindi Medium",
+
+        books: [
+          { id: 1, name: "Rajneeti Vigyan" },
+          { id: 2, name: "Bhugol" },
+          { id: 3, name: "Itihas" },
+          { id: 4, name: "Arthashastra" },
+          { id: 5, name: "Samajshastra" },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 4,
+    name: "Agriculture",
+
+    mediums: [
+      {
+        id: 7,
+        name: "English Medium",
+
+        books: [
+          { id: 1, name: "Horticulture" },
+          { id: 2, name: "Animal Husbandry" },
+          { id: 3, name: "Crop Production" },
+        ],
+      },
+
+      {
+        id: 8,
+        name: "Hindi Medium",
+
+        books: [
+          { id: 1, name: "Udyaniki" },
+          { id: 2, name: "Pashupalan" },
+          { id: 3, name: "Fasal Utpadan" },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 5,
+    name: "Bharati",
+
+    mediums: [
+      {
+        id: 9,
+        name: "English Medium",
+
+        books: [
+          { id: 1, name: "Hindi" },
+          { id: 2, name: "English" },
+          { id: 3, name: "Sanskrit" },
+        ],
+      },
+
+      {
+        id: 10,
+        name: "Hindi Medium",
+
+        books: [
+          { id: 1, name: "Hindi" },
+          { id: 2, name: "Angrezi" },
+          { id: 3, name: "Sanskrit" },
+        ],
+      },
+    ],
+  },
+];
+ 
 
   const normalizeSubjects = (
     subjectList: Subject[]
@@ -186,9 +190,6 @@ export default function SchoolManagement() {
     }));
   };
 
-  // =====================================================
-  // SUBJECTS
-  // =====================================================
 
   const [subjects, setSubjects] = useState<Subject[]>(() => {
     const savedSubjects = localStorage.getItem("subjects");
@@ -231,19 +232,7 @@ export default function SchoolManagement() {
     type,
   });
 
-  // =====================================================
-  // CREATE TYPE BOOKS
-  // =====================================================
-  //
-  // For every book we create separate entries for:
-  //
-  // Textbook
-  // Parikshabodh
-  // Practical
-  // Project
-  //
-  // =====================================================
-
+  
   const createTypeBooks = (bookCount: number) => {
     const typeBooks: Record<string, any> = {};
 
@@ -287,30 +276,7 @@ export default function SchoolManagement() {
     };
   };
 
-  // =====================================================
-  // NORMALIZE OLD + NEW SCHOOL DATA
-  // =====================================================
-  //
-  // Old structure:
-  //
-  // grade
-  //   -> subject
-  //      -> medium
-  //         -> books[]
-  //
-  // New structure:
-  //
-  // grade
-  //   -> subject
-  //      -> medium
-  //         -> Textbook[]
-  //         -> Parikshabodh[]
-  //         -> Practical[]
-  //         -> Project[]
-  //
-  // Old data is automatically moved into Textbook.
-  //
-  // =====================================================
+  
 
   const normalizeSchools = (
     schoolList: School[]
@@ -345,16 +311,7 @@ export default function SchoolManagement() {
             const mediumData =
               subjectData[mediumName];
 
-            // =================================================
-            // OLD DATA FORMAT
-            // =================================================
-            //
-            // mediumData = [
-            //   [{ date, qty }]
-            // ]
-            //
-            // Move this data into Textbook.
-            //
+          
             if (Array.isArray(mediumData)) {
               const textbookData =
                 mediumData.map(
@@ -375,20 +332,33 @@ export default function SchoolManagement() {
                   }
                 );
 
-              subjectData[mediumName] = {
-                Textbook: textbookData,
-                Parikshabodh: mediumData.map(
-                  () => [
-                    createEmptyEntry("Parikshabodh"),
-                  ]
-                ),
-                Practical: mediumData.map(() => [
-                  createEmptyEntry("Practical"),
-                ]),
-                Project: mediumData.map(() => [
-                  createEmptyEntry("Project"),
-                ]),
-              };
+           subjectData[mediumName] = {
+  Textbook: textbookData,
+
+  Parikshabodh: mediumData.map(
+    () => [
+      createEmptyEntry("Parikshabodh"),
+    ]
+  ),
+
+  Practical: mediumData.map(
+    () => [
+      createEmptyEntry("Practical"),
+    ]
+  ),
+
+  Project: mediumData.map(
+    () => [
+      createEmptyEntry("Project"),
+    ]
+  ),
+
+  Guide: mediumData.map(
+    () => [
+      createEmptyEntry("Guide"),
+    ]
+  ),
+};
 
               return;
             }
@@ -488,25 +458,8 @@ export default function SchoolManagement() {
     );
   }, [schools]);
 
-  // =====================================================
-  // HANDLE DATE + QTY CHANGE
-  // =====================================================
-  //
-  // IMPORTANT:
-  //
-  // The selected type is passed here.
-  //
-  // Example:
-  //
-  // Practical
-  // -> books[11][Physics][English Medium][Practical]
-  //
-  // Project
-  // -> books[11][Physics][English Medium][Project]
-  //
-  // They never overwrite each other.
-  //
-  // =====================================================
+  
+  
 
   const handleInputChange = (
     schoolId: number,
