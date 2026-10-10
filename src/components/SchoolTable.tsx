@@ -1087,45 +1087,7 @@ export default function SchoolTable({
   // GET BOOK TOTAL
   // =====================================================
 
-  const getBookTotalQty = (
-    school: School,
-    grade: Grade,
-    subjectName: string,
-    mediumName: string,
-    bookIndex: number,
-    type: BookType
-  ) => {
-    const bookEntries =
-      school.books?.[
-        grade
-      ]?.[subjectName]?.[
-        mediumName
-      ]?.[type]?.[bookIndex];
-
-    if (
-      !Array.isArray(bookEntries)
-    ) {
-      return 0;
-    }
-
-    return bookEntries.reduce(
-      (
-        total: number,
-        entry: any
-      ) => {
-        const qty = Number(
-          entry?.qty || 0
-        );
-
-        return (
-          total +
-          (isNaN(qty) ? 0 : qty)
-        );
-      },
-      0
-    );
-  };
-
+ 
   // =====================================================
   // GRAND TOTAL
   // =====================================================

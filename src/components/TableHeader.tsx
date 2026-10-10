@@ -29,7 +29,6 @@ interface TableHeaderProps {
 
 export default function TableHeader({
   subjects,
-  selectedType,
   setSubjects,
   deleteSubject,
   deleteMedium,
