@@ -46,15 +46,12 @@ const BOOK_TYPES: BookType[] = [
   "Project",
   "Guide"
 ];
-
 export default function SchoolTable({
   subjects,
   schools,
   setSchools,
   setSubjects,
   handleInputChange,
-  getBookName,
-  getSubjectName,
 }: SchoolTableProps) {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
