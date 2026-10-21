@@ -180,7 +180,7 @@ export default function TableHeader({
   // =====================================================
 
   return (
-    <thead className="bg-gray-100">
+    <thead className="sticky top-0 z-40 bg-gray-100">
 
       {/* =================================================
           ROW 1

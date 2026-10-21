@@ -1,5 +1,5 @@
 import React from "react";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 import { FiUpload } from "react-icons/fi";
 import type {
   School,
@@ -282,6 +282,10 @@ export function ExportExcel({
   subjects: Subject[];
   selectedType: BookType;
 }) {
+
+  const [exportGrade, setExportGrade] = React.useState<
+  "11" | "12" | "all"
+>("all");
   // ===================================================
   // GET BOOK ENTRIES
   // ===================================================
@@ -358,299 +362,311 @@ export function ExportExcel({
   // EXPORT
   // ===================================================
 
-  const handleExport = (
-    exportType: "filled" | "empty"
-  ) => {
-    const rows: any[][] = [];
 
-    // =================================================
-    // HEADER 1 - SUBJECT
-    // =================================================
 
-    const row1: any[] = [
-      "S.No",
-      "Code",
-      "School Name",
-      "Grade",
-      "Type",
-    ];
+const handleExport = (
+  exportType: "filled" | "empty",
+  gradeFilter: "11" | "12" | "all" = "all"
+) => {
+  type ExportGrade = "11" | "12";
 
-    subjects.forEach((subject) => {
-      row1.push(subject.name);
+ const gradesToExport: ("11" | "12")[] =
+  gradeFilter === "all"
+    ? ["11", "12"]
+    : [gradeFilter];
 
-      let count = 0;
+  // All subject, medium and book columns
+  const allColumns = subjects.flatMap((subject) =>
+    subject.mediums.flatMap((medium) =>
+      medium.books.map((book, bookIndex) => ({
+        subject,
+        medium,
+        book,
+        bookIndex,
+      }))
+    )
+  );
 
-      subject.mediums.forEach((medium) => {
-        count += medium.books.length * 2;
-      });
+  const getText = (
+    school: School,
+    grade: ExportGrade,
+    subjectName: string,
+    mediumName: string,
+    bookIndex: number,
+    field: "date" | "qty"
+  ): string =>
+    String(
+      getFieldValue(
+        school,
+        grade,
+        subjectName,
+        mediumName,
+        bookIndex,
+        field
+      ) ?? ""
+    ).trim();
 
-      for (let i = 1; i < count; i++) {
-        row1.push("");
+  // Check if a school has any filled data for this grade
+  const hasFilledData = (
+    school: School,
+    grade: ExportGrade
+  ): boolean => {
+    const hasBookData = allColumns.some(
+      ({ subject, medium, bookIndex }) => {
+        const date = getText(
+          school,
+          grade,
+          subject.name,
+          medium.name,
+          bookIndex,
+          "date"
+        );
+
+        const qty = getText(
+          school,
+          grade,
+          subject.name,
+          medium.name,
+          bookIndex,
+          "qty"
+        );
+
+        return date !== "" || qty !== "";
+      }
+    );
+
+    return (
+      hasBookData ||
+      String(getRemark(school, grade) ?? "").trim() !== ""
+    );
+  };
+
+  // Select records separately for each class
+  const exportedRecords: {
+    school: School;
+    grade: ExportGrade;
+  }[] = [];
+
+  schools.forEach((school) => {
+    gradesToExport.forEach((grade) => {
+      const filled = hasFilledData(school, grade);
+
+      if (
+        (exportType === "filled" && filled) ||
+        (exportType === "empty" && !filled)
+      ) {
+        exportedRecords.push({ school, grade });
       }
     });
+  });
 
-    row1.push("Remark");
+  if (exportedRecords.length === 0) {
+    alert(
+      exportType === "filled"
+        ? `No filled ${selectedType} records found.`
+        : `No empty ${selectedType} records found.`
+    );
+    return;
+  }
 
-    rows.push(row1);
+  // Filled export: only book columns with data.
+  // Empty export: all available book columns.
+  const exportColumns =
+    exportType === "empty"
+      ? allColumns
+      : allColumns.filter(
+          ({ subject, medium, bookIndex }) =>
+            exportedRecords.some(({ school, grade }) => {
+              const date = getText(
+                school,
+                grade,
+                subject.name,
+                medium.name,
+                bookIndex,
+                "date"
+              );
 
-    // =================================================
-    // HEADER 2 - MEDIUM
-    // =================================================
+              const qty = getText(
+                school,
+                grade,
+                subject.name,
+                medium.name,
+                bookIndex,
+                "qty"
+              );
 
-    const row2: any[] = [
-      "",
-      "",
-      "",
-      "",
-      "",
-    ];
+              return date !== "" || qty !== "";
+            })
+        );
 
-    subjects.forEach((subject) => {
-      subject.mediums.forEach((medium) => {
-        row2.push(medium.name);
+  // S.No | Code | School Name | Grade | Type
+  const FIXED_COLUMNS = 5;
+  const rows: any[][] = [];
+  const merges: XLSX.Range[] = [];
 
-        for (
-          let i = 1;
-          i < medium.books.length * 2;
-          i++
-        ) {
-          row2.push("");
-        }
-      });
+  // ------------------------------------------
+  // FOUR HEADER ROWS
+  // ------------------------------------------
+
+  const row1: any[] = [
+    "S.No",
+    "Code",
+    "School Name",
+    "Grade",
+    "Type",
+  ];
+
+  const row2: any[] = ["", "", "", "", ""];
+  const row3: any[] = ["", "", "", "", ""];
+  const row4: any[] = ["", "", "", "", ""];
+
+  exportColumns.forEach((item, index) => {
+    const { subject, medium, book } = item;
+    const previous = exportColumns[index - 1];
+
+    const isNewSubject =
+      !previous || previous.subject.id !== subject.id;
+
+    const isNewMedium =
+      !previous ||
+      previous.subject.id !== subject.id ||
+      previous.medium.id !== medium.id;
+
+    // Subject and medium names appear only at group starts.
+    row1.push(isNewSubject ? subject.name : "", "");
+    row2.push(isNewMedium ? medium.name : "", "");
+    row3.push(book.name, "");
+    row4.push("Date", "Qty");
+
+    const bookStartColumn = FIXED_COLUMNS + index * 2;
+
+    // Merge book name over Date and Qty columns.
+    merges.push({
+      s: { r: 2, c: bookStartColumn },
+      e: { r: 2, c: bookStartColumn + 1 },
     });
 
-    row2.push("");
+    const next = exportColumns[index + 1];
 
-    rows.push(row2);
+    const isLastInSubject =
+      !next || next.subject.id !== subject.id;
 
-    // =================================================
-    // HEADER 3 - BOOK
-    // =================================================
+    const isLastInMedium =
+      !next ||
+      next.subject.id !== subject.id ||
+      next.medium.id !== medium.id;
 
-    const row3: any[] = [
-      "",
-      "",
-      "",
-      "",
-      "",
-    ];
+    if (isLastInSubject) {
+      const firstSubjectIndex = exportColumns.findIndex(
+        (entry) => entry.subject.id === subject.id
+      );
 
-    subjects.forEach((subject) => {
-      subject.mediums.forEach((medium) => {
-        medium.books.forEach((book) => {
-          row3.push(book.name);
-          row3.push("");
-        });
+      const subjectStart =
+        FIXED_COLUMNS + firstSubjectIndex * 2;
+
+      merges.push({
+        s: { r: 0, c: subjectStart },
+        e: { r: 0, c: bookStartColumn + 1 },
       });
-    });
+    }
 
-    row3.push("");
+    if (isLastInMedium) {
+      const firstMediumIndex = exportColumns.findIndex(
+        (entry) =>
+          entry.subject.id === subject.id &&
+          entry.medium.id === medium.id
+      );
 
-    rows.push(row3);
+      const mediumStart =
+        FIXED_COLUMNS + firstMediumIndex * 2;
 
-    // =================================================
-    // HEADER 4 - DATE / QTY
-    // =================================================
-
-    const row4: any[] = [
-      "",
-      "",
-      "",
-      "",
-      "",
-    ];
-
-    subjects.forEach((subject) => {
-      subject.mediums.forEach((medium) => {
-        medium.books.forEach(() => {
-          row4.push("Date");
-          row4.push("Qty");
-        });
+      merges.push({
+        s: { r: 1, c: mediumStart },
+        e: { r: 1, c: bookStartColumn + 1 },
       });
+    }
+  });
+
+  // Remark column
+  const remarkColumn =
+    FIXED_COLUMNS + exportColumns.length * 2;
+
+  row1.push("Remark");
+  row2.push("");
+  row3.push("");
+  row4.push("");
+
+  // Merge fixed columns vertically across the four headers.
+  for (let column = 0; column < FIXED_COLUMNS; column++) {
+    merges.push({
+      s: { r: 0, c: column },
+      e: { r: 3, c: column },
     });
+  }
 
-    row4.push("");
+  // Merge Remark vertically.
+  merges.push({
+    s: { r: 0, c: remarkColumn },
+    e: { r: 3, c: remarkColumn },
+  });
 
-    rows.push(row4);
+  rows.push(row1, row2, row3, row4);
 
-    // =================================================
-    // SERIAL NUMBER
-    // =================================================
+  // ------------------------------------------
+  // DATA ROWS AND CLASS TOTALS
+  // ------------------------------------------
 
-    let serialNo = 1;
+  let serialNo = 1;
 
-    // =================================================
-    // CLASS 11 / CLASS 12 EXPORTED SCHOOLS
-    // =================================================
+  gradesToExport.forEach((grade) => {
+    const classRecords = exportedRecords.filter(
+      (record) => record.grade === grade
+    );
 
-    const exportedSchools: Record<
-      "11" | "12",
-      School[]
-    > = {
-      "11": [],
-      "12": [],
-    };
+    classRecords.forEach(({ school }) => {
+      const row: any[] = [
+        serialNo++,
+        school.code ?? "",
+        school.schoolName ?? "",
+        grade,
+        selectedType,
+      ];
 
-    // =================================================
-    // DATA
-    // =================================================
-
-    schools.forEach((school) => {
-      (
-        ["11", "12"] as const
-      ).forEach((grade) => {
-        let hasFilledData = false;
-
-        // =============================================
-        // CHECK DATE / QTY FOR SELECTED TYPE ONLY
-        // =============================================
-
-        subjects.forEach((subject) => {
-          subject.mediums.forEach((medium) => {
-            medium.books.forEach(
-              (_, bookIndex) => {
-                const date =
-                  getFieldValue(
-                    school,
-                    grade,
-                    subject.name,
-                    medium.name,
-                    bookIndex,
-                    "date"
-                  );
-
-                const qty =
-                  getFieldValue(
-                    school,
-                    grade,
-                    subject.name,
-                    medium.name,
-                    bookIndex,
-                    "qty"
-                  );
-
-                if (
-                  date.trim() !== "" ||
-                  qty.trim() !== ""
-                ) {
-                  hasFilledData = true;
-                }
-              }
-            );
-          });
-        });
-
-        // =============================================
-        // CHECK REMARK
-        // =============================================
-
-        const remark =
-          getRemark(
+      exportColumns.forEach(
+        ({ subject, medium, bookIndex }) => {
+          const date = getText(
             school,
-            grade
+            grade,
+            subject.name,
+            medium.name,
+            bookIndex,
+            "date"
           );
 
-        if (
-          remark.trim() !== ""
-        ) {
-          hasFilledData = true;
+          const qty = getText(
+            school,
+            grade,
+            subject.name,
+            medium.name,
+            bookIndex,
+            "qty"
+          );
+
+          const numericQty =
+            qty !== "" && Number.isFinite(Number(qty))
+              ? Number(qty)
+              : qty;
+
+          row.push(date, numericQty);
         }
+      );
 
-        // =============================================
-        // FILLED FILTER
-        // =============================================
-
-        if (
-          exportType === "filled" &&
-          !hasFilledData
-        ) {
-          return;
-        }
-
-        // =============================================
-        // EMPTY FILTER
-        // =============================================
-
-        if (
-          exportType === "empty" &&
-          hasFilledData
-        ) {
-          return;
-        }
-
-        // =============================================
-        // STORE EXPORTED SCHOOL
-        // =============================================
-
-        exportedSchools[grade].push(school);
-
-        // =============================================
-        // SCHOOL ROW
-        // =============================================
-
-        const row: any[] = [
-          serialNo++,
-          school.code ?? "",
-          school.schoolName ?? "",
-          grade,
-          selectedType,
-        ];
-
-        // =============================================
-        // SUBJECT DATA
-        // =============================================
-
-        subjects.forEach((subject) => {
-          subject.mediums.forEach((medium) => {
-            medium.books.forEach(
-              (_, bookIndex) => {
-                const date =
-                  getFieldValue(
-                    school,
-                    grade,
-                    subject.name,
-                    medium.name,
-                    bookIndex,
-                    "date"
-                  );
-
-                const qty =
-                  getFieldValue(
-                    school,
-                    grade,
-                    subject.name,
-                    medium.name,
-                    bookIndex,
-                    "qty"
-                  );
-
-                row.push(date);
-                row.push(qty);
-              }
-            );
-          });
-        });
-
-        // =============================================
-        // REMARK
-        // =============================================
-
-        row.push(remark);
-
-        rows.push(row);
-      });
+      row.push(getRemark(school, grade) ?? "");
+      rows.push(row);
     });
 
-    // =================================================
-    // CLASS TOTAL ROW FUNCTION
-    // =================================================
-
-    const addClassTotalRow = (
-      grade: "11" | "12"
-    ) => {
-      const classSchools =
-        exportedSchools[grade];
-
+    // Separate total row for each class
+    if (classRecords.length > 0) {
       const totalRow: any[] = [
         "",
         "",
@@ -659,407 +675,280 @@ export function ExportExcel({
         selectedType,
       ];
 
-      // -----------------------------------------------
-      // SUBJECT / MEDIUM / BOOK TOTAL
-      // -----------------------------------------------
+      exportColumns.forEach(
+        ({ subject, medium, bookIndex }) => {
+          let totalQty = 0;
 
-      subjects.forEach((subject) => {
-        subject.mediums.forEach((medium) => {
-          medium.books.forEach(
-            (_, bookIndex) => {
-              // DATE COLUMN
-              totalRow.push("Total");
+          classRecords.forEach(({ school }) => {
+            const qty = getText(
+              school,
+              grade,
+              subject.name,
+              medium.name,
+              bookIndex,
+              "qty"
+            );
 
-              // QTY TOTAL
-              let totalQty = 0;
-
-              classSchools.forEach((school) => {
-                const mediumData =
-                  school.books?.[
-                    grade
-                  ]?.[
-                    subject.name
-                  ]?.[
-                    medium.name
-                  ];
-
-                if (!mediumData) {
-                  return;
-                }
-
-                // IMPORTANT:
-                // Total only selectedType.
-                const bookEntries =
-                  mediumData[
-                    selectedType
-                  ]?.[bookIndex];
-
-                if (!Array.isArray(bookEntries)) {
-                  return;
-                }
-
-                bookEntries.forEach((entry) => {
-                  const qty =
-                    Number(
-                      entry.qty || 0
-                    );
-
-                  if (!isNaN(qty)) {
-                    totalQty += qty;
-                  }
-                });
-              });
-
-              totalRow.push(totalQty);
+            if (qty !== "" && Number.isFinite(Number(qty))) {
+              totalQty += Number(qty);
             }
-          );
-        });
-      });
+          });
 
-      // -----------------------------------------------
-      // REMARK
-      // -----------------------------------------------
-
-      totalRow.push("-");
-
-      rows.push(totalRow);
-    };
-
-    // =================================================
-    // CLASS 11 TOTAL
-    // =================================================
-
-    if (
-      exportedSchools["11"].length > 0
-    ) {
-      addClassTotalRow("11");
-    }
-
-    // =================================================
-    // CLASS 12 TOTAL
-    // =================================================
-
-    if (
-      exportedSchools["12"].length > 0
-    ) {
-      addClassTotalRow("12");
-    }
-
-    // =================================================
-    // NO RECORD
-    // =================================================
-
-    if (rows.length === 4) {
-      alert(
-        exportType === "filled"
-          ? `No filled ${selectedType} Date, Qty or Remark records were found.`
-          : `No empty ${selectedType} records were found.`
-      );
-
-      return;
-    }
-
-    // =================================================
-    // WORKSHEET
-    // =================================================
-
-    const worksheet =
-      XLSX.utils.aoa_to_sheet(rows);
-
-    // =================================================
-    // MERGES
-    // =================================================
-
-    const merges: XLSX.Range[] = [];
-
-    // IMPORTANT:
-    // 0 S.No
-    // 1 Code
-    // 2 School Name
-    // 3 Grade
-    // 4 Type
-    // 5 = first Subject column
-    let col = 5;
-
-    subjects.forEach((subject) => {
-      let subjectSize = 0;
-
-      subject.mediums.forEach(
-        (medium) => {
-          subjectSize +=
-            medium.books.length * 2;
+          totalRow.push("Total", totalQty);
         }
       );
 
-      // ===============================================
-      // SUBJECT MERGE
-      // ===============================================
+      totalRow.push("");
+      rows.push(totalRow);
+    }
+  });
 
-      if (subjectSize > 0) {
-        merges.push({
-          s: {
-            r: 0,
-            c: col,
-          },
-          e: {
-            r: 0,
-            c:
-              col +
-              subjectSize -
-              1,
-          },
-        });
+  // ------------------------------------------
+  // CREATE WORKSHEET
+  // ------------------------------------------
+
+  const worksheet = XLSX.utils.aoa_to_sheet(rows);
+
+  worksheet["!merges"] = merges;
+
+  const totalColumns =
+    FIXED_COLUMNS + exportColumns.length * 2 + 1;
+
+ 
+worksheet["!cols"] = [
+  { wch: 8 },   // S.No
+  { wch: 14 },  // Code
+  { wch: 40 },  // School Name - wider column
+  { wch: 10 },  // Grade
+  { wch: 18 },  // Type
+  ...exportColumns.flatMap(() => [
+    { wch: 15 }, // Date
+    { wch: 10 }, // Qty
+  ]),
+  { wch: 25 },  // Remark
+];
+
+
+  worksheet["!freeze"] = {
+    xSplit: FIXED_COLUMNS,
+    ySplit: 4,
+    topLeftCell: "F5",
+    activePane: "bottomRight",
+    state: "frozen",
+  };
+
+  worksheet["!autofilter"] = {
+    ref: XLSX.utils.encode_range({
+      s: { r: 3, c: 0 },
+      e: {
+        r: Math.max(3, rows.length - 1),
+        c: totalColumns - 1,
+      },
+    }),
+  };
+
+ 
+worksheet["!rows"] = rows.map((row, rowIndex) => ({
+  hpt:
+    rowIndex === 0
+      ? 30
+      : rowIndex < 4
+      ? 28
+      : String(row[2] ?? "").length > 35
+      ? 40
+      : 25,
+}));
+
+
+  // ------------------------------------------
+  // STYLES
+  // ------------------------------------------
+
+  const headerStyle = {
+    fill: { fgColor: { rgb: "1F4E78" } },
+    font: {
+      bold: true,
+      color: { rgb: "FFFFFF" },
+      sz: 11,
+    },
+    alignment: {
+      horizontal: "center" as const,
+      vertical: "center" as const,
+      wrapText: true,
+    },
+    border: {
+      top: { style: "thin" as const, color: { rgb: "B7C9D6" } },
+      bottom: { style: "thin" as const, color: { rgb: "B7C9D6" } },
+      left: { style: "thin" as const, color: { rgb: "B7C9D6" } },
+      right: { style: "thin" as const, color: { rgb: "B7C9D6" } },
+    },
+  };
+
+  const subHeaderStyle = {
+    fill: { fgColor: { rgb: "D9EAF7" } },
+    font: {
+      bold: true,
+      color: { rgb: "17365D" },
+    },
+    alignment: {
+      horizontal: "center" as const,
+      vertical: "center" as const,
+      wrapText: true,
+    },
+    border: {
+      top: { style: "thin" as const, color: { rgb: "B7C9D6" } },
+      bottom: { style: "thin" as const, color: { rgb: "B7C9D6" } },
+      left: { style: "thin" as const, color: { rgb: "B7C9D6" } },
+      right: { style: "thin" as const, color: { rgb: "B7C9D6" } },
+    },
+  };
+
+  const cellStyle = {
+    alignment: {
+      horizontal: "center" as const,
+      vertical: "center" as const,
+      wrapText: true,
+    },
+    border: {
+      top: { style: "thin" as const, color: { rgb: "D9E1F2" } },
+      bottom: { style: "thin" as const, color: { rgb: "D9E1F2" } },
+      left: { style: "thin" as const, color: { rgb: "D9E1F2" } },
+      right: { style: "thin" as const, color: { rgb: "D9E1F2" } },
+    },
+  };
+
+  // Style all worksheet cells.
+  for (let r = 0; r < rows.length; r++) {
+    for (let c = 0; c < totalColumns; c++) {
+      const address = XLSX.utils.encode_cell({ r, c });
+
+      if (!worksheet[address]) {
+        worksheet[address] = { t: "s", v: "" };
       }
 
-      // ===============================================
-      // MEDIUM MERGE
-      // ===============================================
+      if (r === 0) {
+        worksheet[address].s = headerStyle;
+      } else if (r < 4) {
+        worksheet[address].s = subHeaderStyle;
+      } else {
+        worksheet[address].s = cellStyle;
+      }
+    }
+  }
 
-      let mediumCol = col;
-
-      subject.mediums.forEach(
-        (medium) => {
-          const mediumSize =
-            medium.books.length * 2;
-
-          if (mediumSize > 0) {
-            merges.push({
-              s: {
-                r: 1,
-                c: mediumCol,
-              },
-              e: {
-                r: 1,
-                c:
-                  mediumCol +
-                  mediumSize -
-                  1,
-              },
-            });
-          }
-
-          mediumCol +=
-            mediumSize;
-        }
-      );
-
-      col += subjectSize;
-    });
-
-    // =================================================
-    // REMARK MERGE
-    // =================================================
-
-    const remarkColumn = col;
-
-    merges.push({
-      s: {
-        r: 0,
-        c: remarkColumn,
-      },
-      e: {
-        r: 3,
-        c: remarkColumn,
-      },
-    });
-
-    worksheet["!merges"] = merges;
-
-    // =================================================
-    // TOTAL COLUMNS
-    // =================================================
-
-    const totalBookColumns =
-      subjects.reduce(
-        (total, subject) => {
-          return (
-            total +
-            subject.mediums.reduce(
-              (
-                mediumTotal,
-                medium
-              ) => {
-                return (
-                  mediumTotal +
-                  medium.books.length * 2
-                );
-              },
-              0
-            )
-          );
-        },
-        0
-      );
-
-    // 5 fixed columns + books + remark
-    const totalColumns =
-      5 +
-      totalBookColumns +
-      1;
-
-    // =================================================
-    // COLUMN WIDTH
-    // =================================================
-
-    const columnWidths: XLSX.ColInfo[] = [
-      {
-        wch: 8,
-      },
-      {
-        wch: 15,
-      },
-      {
-        wch: 30,
-      },
-      {
-        wch: 10,
-      },
-      {
-        wch: 18,
-      },
-    ];
-
-    for (
-      let i = 5;
-      i < totalColumns - 1;
-      i++
+  // Highlight class total rows.
+  rows.forEach((row, rowIndex) => {
+    if (
+      rowIndex >= 4 &&
+      String(row[2] ?? "").startsWith("CLASS ")
     ) {
-      columnWidths.push({
-        wch: 18,
-      });
+      for (let c = 0; c < totalColumns; c++) {
+        const address = XLSX.utils.encode_cell({
+          r: rowIndex,
+          c,
+        });
+
+        worksheet[address].s = {
+          fill: { fgColor: { rgb: "E2F0D9" } },
+          font: {
+            bold: true,
+            color: { rgb: "375623" },
+          },
+          alignment: {
+            horizontal: "center",
+            vertical: "center",
+            wrapText: true,
+          },
+          border: {
+            top: { style: "thin", color: { rgb: "A9D18E" } },
+            bottom: { style: "thin", color: { rgb: "A9D18E" } },
+            left: { style: "thin", color: { rgb: "A9D18E" } },
+            right: { style: "thin", color: { rgb: "A9D18E" } },
+          },
+        };
+      }
+    }
+  });
+
+  // Reapply centered alignment to the top-left cell
+  // of every merged range, preserving its existing style.
+  merges.forEach(({ s }) => {
+    const address = XLSX.utils.encode_cell(s);
+
+    if (!worksheet[address]) {
+      worksheet[address] = { t: "s", v: "" };
     }
 
-    columnWidths.push({
-      wch: 30,
-    });
+    const currentStyle = worksheet[address].s ?? {};
 
-    worksheet["!cols"] =
-      columnWidths;
+    worksheet[address].s = {
+      ...currentStyle,
+      alignment: {
+        ...(currentStyle.alignment ?? {}),
+        horizontal: "center",
+        vertical: "center",
+        wrapText: true,
+      },
+    };
+  });
 
-    // =================================================
-    // ROW HEIGHT
-    // =================================================
+  // ------------------------------------------
+  // DOWNLOAD
+  // ------------------------------------------
 
-    worksheet["!rows"] = [];
+  const workbook = XLSX.utils.book_new();
 
-    for (
-      let rowIndex = 4;
-      rowIndex < rows.length;
-      rowIndex++
-    ) {
-      const row =
-        rows[rowIndex];
+  XLSX.utils.book_append_sheet(
+    workbook,
+    worksheet,
+    "School Data"
+  );
 
-      let maxLines = 1;
+  const className =
+    gradeFilter === "all"
+      ? "Both_Classes"
+      : `Class_${gradeFilter}`;
 
-      row.forEach((value) => {
-        if (
-          value !== null &&
-          value !== undefined
-        ) {
-          const text =
-            String(value);
+  const fileName =
+    `${selectedType}_${exportType}_${className}.xlsx`;
 
-          const lineCount =
-            text.split("\n").length;
+  XLSX.writeFile(workbook, fileName);
+};
 
-          if (
-            lineCount > maxLines
-          ) {
-            maxLines =
-              lineCount;
-          }
-        }
-      });
-
-      worksheet["!rows"][
-        rowIndex
-      ] = {
-        hpt: Math.max(
-          20,
-          maxLines * 18
-        ),
-      };
-    }
-
-    // =================================================
-    // WORKBOOK
-    // =================================================
-
-    const workbook =
-      XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      worksheet,
-      "School Data"
-    );
-
-    // =================================================
-    // FILE NAME
-    // =================================================
-
-    const fileName =
-      exportType === "filled"
-        ? `${selectedType}_Filled_Report.xlsx`
-        : `${selectedType}_Empty_Report.xlsx`;
-
-    // =================================================
-    // DOWNLOAD
-    // =================================================
-
-    XLSX.writeFile(
-      workbook,
-      fileName
-    );
-  };
 
   // ===================================================
   // BUTTONS
   // ===================================================
 
   return (
-    <div className="flex gap-3">
+    <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-col gap-1">
+        
+        <select
+          id="exportGrade"
+          value={exportGrade}
+          onChange={(e) =>
+            setExportGrade(
+              e.target.value as "11" | "12" | "all"
+            )
+          }
+          className="rounded-xl border border-gray-300 bg-white px-4 py-3 font-medium text-gray-800"
+        >
+          
+          <option value="11">Class 11</option>
+          <option value="12">Class 12</option>
+          <option value="all">Both Classes</option>
+        </select>
+      </div>
+
       <button
         type="button"
-        onClick={() =>
-          handleExport("filled")
-        }
-        className="
-          rounded-xl
-          bg-blue-600
-          px-6
-          py-3
-          font-bold
-          text-white
-          shadow-lg
-          text-xl
-          hover:bg-green-700
-        "
+        onClick={() => handleExport("filled", exportGrade)}
+        className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white shadow-lg hover:bg-green-700"
       >
         Export Filled
       </button>
-<button
-  type="button"
-  onClick={() => handleExport("empty")}
-  disabled={true}
-  className="
-    rounded-xl
-    bg-blue-600
-    px-6
-    py-3
-    text-xl
-    font-bold
-    text-white
-    shadow-lg
-    hover:bg-yellow-600
-    disabled:opacity-50
-    disabled:cursor-not-allowed
-    disabled:hover:bg-yellow-500
-  "
->
-  Export Empty
-</button>
+
     </div>
   );
 }

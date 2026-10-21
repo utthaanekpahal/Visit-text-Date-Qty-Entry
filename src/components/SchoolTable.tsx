@@ -28,6 +28,15 @@ interface SchoolTableProps {
     value: string,
     type: BookType
   ) => void;
+    getBookName: (
+    bookName: string,
+    mediumName: string
+  ) => string;
+
+  getSubjectName: (
+    subjectName: string,
+    mediumName: string
+  ) => string;
 }
 
 const BOOK_TYPES: BookType[] = [
@@ -44,6 +53,8 @@ export default function SchoolTable({
   setSchools,
   setSubjects,
   handleInputChange,
+  getBookName,
+  getSubjectName,
 }: SchoolTableProps) {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -194,6 +205,7 @@ export default function SchoolTable({
     return result;
   };
 
+  
   // =====================================================
   // ADD SCHOOL
   // =====================================================
@@ -1083,11 +1095,7 @@ export default function SchoolTable({
     );
   };
 
-  // =====================================================
-  // GET BOOK TOTAL
-  // =====================================================
-
- 
+  
   // =====================================================
   // GRAND TOTAL
   // =====================================================
@@ -1540,6 +1548,8 @@ export default function SchoolTable({
                                               outline-none
                                               text-center
                                               leading-6
+                                              text-xl
+                                              font-semibold
                                               whitespace-pre-wrap
                                               block
                                             "
@@ -1606,6 +1616,8 @@ export default function SchoolTable({
                                               leading-6
                                               whitespace-pre-wrap
                                               block
+                                              font-semibold
+                                              text-xl
                                             "
                                           />
                                         </td>
@@ -1658,6 +1670,8 @@ export default function SchoolTable({
                               outline-none
                               text-left
                               leading-6
+                              text-xl
+                              font-semibold
                             "
                           />
                         </td>

@@ -3,194 +3,203 @@ import SchoolTable from "../components/SchoolTable";
 import type { Subject, School, BookType } from "../types.ts";
 
 export default function SchoolManagement() {
-
-
   const BOOK_TYPES: BookType[] = [
     "Textbook",
     "Parikshabodh",
     "Practical",
     "Project",
-    "Guide"
+    "Guide",
   ];
 
- 
+  // Default subjects and books
+  const defaultSubjects: Subject[] = [
+    {
+      id: 1,
+      name: "Science",
+      mediums: [
+        {
+          id: 1,
+          name: "English Medium",
+          books: [
+            { id: 1, name: "Physics" },
+            { id: 2, name: "Chemistry" },
+            { id: 3, name: "Biology" },
+            { id: 4, name: "Mathematics" },
+          ],
+        },
+        {
+          id: 2,
+          name: "Hindi Medium",
+          books: [
+            { id: 1, name: "भौतिक विज्ञान" },
+            { id: 2, name: "रसायन विज्ञान" },
+            { id: 3, name: "जीव विज्ञान" },
+            { id: 4, name: "गणित" },
+          ],
+        },
+      ],
+    },
+    {
+      id: 2,
+      name: "Commerce",
+      mediums: [
+        {
+          id: 3,
+          name: "English Medium",
+          books: [
+            { id: 1, name: "Business Studies" },
+            { id: 2, name: "Accountancy" },
+            { id: 3, name: "Economics" },
+          ],
+        },
+        {
+          id: 4,
+          name: "Hindi Medium",
+          books: [
+            { id: 1, name: "व्यवसाय अध्ययन" },
+            { id: 2, name: "लेखाशास्त्र" },
+            { id: 3, name: "अर्थशास्त्र" },
+          ],
+        },
+      ],
+    },
+    {
+      id: 3,
+      name: "Arts",
+      mediums: [
+        {
+          id: 5,
+          name: "English Medium",
+          books: [
+            { id: 1, name: "Political Science" },
+            { id: 2, name: "Geography" },
+            { id: 3, name: "History" },
+            { id: 4, name: "Economics" },
+            { id: 5, name: "Sociology" },
+          ],
+        },
+        {
+          id: 6,
+          name: "Hindi Medium",
+          books: [
+            { id: 1, name: "राजनीति विज्ञान" },
+            { id: 2, name: "भूगोल" },
+            { id: 3, name: "इतिहास" },
+            { id: 4, name: "अर्थशास्त्र" },
+            { id: 5, name: "समाजशास्त्र" },
+          ],
+        },
+      ],
+    },
+    {
+      id: 4,
+      name: "Agriculture",
+      mediums: [
+        {
+          id: 7,
+          name: "English Medium",
+          books: [
+            { id: 1, name: "Horticulture" },
+            { id: 2, name: "Animal Husbandry" },
+            { id: 3, name: "Crop Production" },
+          ],
+        },
+        {
+          id: 8,
+          name: "Hindi Medium",
+          books: [
+            { id: 1, name: "कृषि विज्ञान" },
+            { id: 2, name: "पशु विज्ञान" },
+            { id: 3, name: "फसल विज्ञान" },
+          ],
+        },
+      ],
+    },
+    {
+      id: 5,
+      name: "Bharati",
+      mediums: [
+        {
+          id: 9,
+          name: "English Medium",
+          books: [
+            { id: 1, name: "Hindi" },
+            { id: 2, name: "English" },
+            { id: 3, name: "Sanskrit" },
+          ],
+        },
+        {
+          id: 10,
+          name: "Hindi Medium",
+          books: [
+            { id: 1, name: "हिंदी" },
+            { id: 2, name: "अंग्रेज़ी" },
+            { id: 3, name: "संस्कृत" },
+          ],
+        },
+      ],
+    },
+  ];
 
- const defaultSubjects: Subject[] = [
-  {
-    id: 1,
-    name: "Science",
-
-    mediums: [
-      {
-        id: 1,
-        name: "English Medium",
-
-        books: [
-          { id: 1, name: "Physics" },
-          { id: 2, name: "Chemistry" },
-          { id: 3, name: "Biology" },
-          { id: 4, name: "Mathematics" },
-        ],
-      },
-
-      {
-        id: 2,
-        name: "Hindi Medium",
-
-        books: [
-          { id: 1, name: "Bhautik" },
-          { id: 2, name: "Rasayan" },
-          { id: 3, name: "Jeev Vigyan" },
-          { id: 4, name: "Ganit" },
-        ],
-      },
-    ],
-  },
-
-  {
-    id: 2,
-    name: "Commerce",
-
-    mediums: [
-      {
-        id: 3,
-        name: "English Medium",
-
-        books: [
-          { id: 1, name: "Business Studies" },
-          { id: 2, name: "Accountancy" },
-          { id: 3, name: "Economics" },
-        ],
-      },
-
-      {
-        id: 4,
-        name: "Hindi Medium",
-
-        books: [
-          { id: 1, name: "Vyavsay Adhyayan" },
-          { id: 2, name: "Lekhashastra" },
-          { id: 3, name: "Arthashastra" },
-        ],
-      },
-    ],
-  },
-
-  {
-    id: 3,
-    name: "Arts",
-
-    mediums: [
-      {
-        id: 5,
-        name: "English Medium",
-
-        books: [
-          { id: 1, name: "Political Science" },
-          { id: 2, name: "Geography" },
-          { id: 3, name: "History" },
-          { id: 4, name: "Economics" },
-          { id: 5, name: "Sociology" },
-        ],
-      },
-
-      {
-        id: 6,
-        name: "Hindi Medium",
-
-        books: [
-          { id: 1, name: "Rajneeti Vigyan" },
-          { id: 2, name: "Bhugol" },
-          { id: 3, name: "Itihas" },
-          { id: 4, name: "Arthashastra" },
-          { id: 5, name: "Samajshastra" },
-        ],
-      },
-    ],
-  },
-
-  {
-    id: 4,
-    name: "Agriculture",
-
-    mediums: [
-      {
-        id: 7,
-        name: "English Medium",
-
-        books: [
-          { id: 1, name: "Horticulture" },
-          { id: 2, name: "Animal Husbandry" },
-          { id: 3, name: "Crop Production" },
-        ],
-      },
-
-      {
-        id: 8,
-        name: "Hindi Medium",
-
-        books: [
-          { id: 1, name: "Udyaniki" },
-          { id: 2, name: "Pashupalan" },
-          { id: 3, name: "Fasal Utpadan" },
-        ],
-      },
-    ],
-  },
-
-  {
-    id: 5,
-    name: "Bharati",
-
-    mediums: [
-      {
-        id: 9,
-        name: "English Medium",
-
-        books: [
-          { id: 1, name: "Hindi" },
-          { id: 2, name: "English" },
-          { id: 3, name: "Sanskrit" },
-        ],
-      },
-
-      {
-        id: 10,
-        name: "Hindi Medium",
-
-        books: [
-          { id: 1, name: "Hindi" },
-          { id: 2, name: "Angrezi" },
-          { id: 3, name: "Sanskrit" },
-        ],
-      },
-    ],
-  },
-];
- 
-
-  const normalizeSubjects = (
-    subjectList: Subject[]
-  ): Subject[] => {
-    return subjectList.map((subject) => ({
-      ...subject,
-
-      mediums: Array.isArray(subject.mediums)
-        ? subject.mediums.map((medium) => ({
-            ...medium,
-
-            books: Array.isArray(medium.books)
-              ? medium.books.map((book) => ({
-                  id: book.id,
-                  name: book.name,
-                }))
-              : [],
-          }))
-        : [],
-    }));
+  // Hindi subject names
+  const hindiSubjectNames: Record<string, string> = {
+    Science: "विज्ञान",
+    Commerce: "वाणिज्य",
+    Arts: "कला",
+    Agriculture: "कृषि",
+    Bharati: "भारती",
   };
 
+  // Hindi book names
+  const hindiBookNames: Record<string, string> = {
+    Physics: "भौतिक विज्ञान",
+    Chemistry: "रसायन विज्ञान",
+    Biology: "जीव विज्ञान",
+    Mathematics: "गणित",
 
+    "Business Studies": "व्यवसाय अध्ययन",
+    Accountancy: "लेखाशास्त्र",
+    Economics: "अर्थशास्त्र",
+
+    "Political Science": "राजनीति विज्ञान",
+    Geography: "भूगोल",
+    History: "इतिहास",
+    Sociology: "समाजशास्त्र",
+
+    Horticulture: "कृषि विज्ञान",
+    "Animal Husbandry": "पशु विज्ञान",
+    "Crop Production": "फसल विज्ञान",
+
+    Hindi: "हिंदी",
+    English: "अंग्रेज़ी",
+    Sanskrit: "संस्कृत",
+  };
+
+  // Display subject name according to medium
+  const getSubjectName = (
+    subjectName: string,
+    mediumName: string
+  ): string => {
+    if (mediumName !== "Hindi Medium") {
+      return subjectName;
+    }
+
+    return hindiSubjectNames[subjectName] ?? subjectName;
+  };
+
+  // Display book name according to medium
+  const getBookName = (
+    bookName: string,
+    mediumName: string
+  ): string => {
+    if (mediumName !== "Hindi Medium") {
+      return bookName;
+    }
+
+    return hindiBookNames[bookName] ?? bookName;
+  };
+
+  // Load saved subjects or use defaults
   const [subjects, setSubjects] = useState<Subject[]>(() => {
     const savedSubjects = localStorage.getItem("subjects");
 
@@ -210,6 +219,13 @@ export default function SchoolManagement() {
 
     return defaultSubjects;
   });
+
+  // Keep your existing code below this point.
+
+function normalizeSubjects(subjects: Subject[]): Subject[] {
+  return subjects;
+}
+
 
   // =====================================================
   // SAVE SUBJECTS
@@ -579,12 +595,14 @@ export default function SchoolManagement() {
   // =====================================================
 
   return (
-    <SchoolTable
-      subjects={subjects}
-      setSubjects={setSubjects}
-      schools={schools}
-      setSchools={setSchools}
-      handleInputChange={handleInputChange}
-    />
+   <SchoolTable
+  subjects={subjects}
+  setSubjects={setSubjects}
+  schools={schools}
+  setSchools={setSchools}
+  handleInputChange={handleInputChange}
+  getBookName={getBookName}
+  getSubjectName={getSubjectName}
+/>
   );
 }
