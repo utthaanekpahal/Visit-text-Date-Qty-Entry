@@ -17,26 +17,27 @@ interface SchoolTableProps {
   schools: School[];
   setSchools: React.Dispatch<React.SetStateAction<School[]>>;
   setSubjects: React.Dispatch<React.SetStateAction<Subject[]>>;
-  handleInputChange: (
-    schoolId: number,
-    grade: string,
-    subjectName: string,
-    mediumName: string,
-    bookIndex: number,
-    entryIndex: number,
-    field: "date" | "qty",
-    value: string,
-    type: BookType
-  ) => void;
-    getBookName: (
-    bookName: string,
-    mediumName: string
-  ) => string;
+handleInputChange: (
+  schoolId: number,
+  grade: string,
+  subjectName: string,
+  mediumName: string,
+  bookIndex: number,
+  entryIndex: number,
+  field: "date" | "qty",
+  value: string,
+  type: BookType
+) => void;
 
-  getSubjectName: (
-    subjectName: string,
-    mediumName: string
-  ) => string;
+getBookName: (
+  bookName: string,
+  mediumName: string
+) => string;
+
+getSubjectName: (
+  subjectName: string,
+  mediumName: string
+) => string;
 }
 
 const BOOK_TYPES: BookType[] = [
@@ -52,6 +53,8 @@ export default function SchoolTable({
   setSchools,
   setSubjects,
   handleInputChange,
+  getBookName,
+  getSubjectName,
 }: SchoolTableProps) {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -1304,14 +1307,18 @@ export default function SchoolTable({
 
       <div className="overflow-x-auto border rounded-lg relative">
         <table className="border-collapse w-full">
-          <TableHeader
-            subjects={visibleSubjects}
-            selectedType={selectedType}
-            setSubjects={setSubjects}
-            deleteSubject={deleteSubject}
-            deleteMedium={deleteMedium}
-            deleteBook={deleteBook}
-          />
+      
+<TableHeader
+  subjects={visibleSubjects}
+  selectedType={selectedType}
+  setSubjects={setSubjects}
+  deleteSubject={deleteSubject}
+  deleteMedium={deleteMedium}
+  deleteBook={deleteBook}
+  getBookName={getBookName}
+  getSubjectName={getSubjectName}
+/>
+
 
           <tbody>
             {currentSchools.map(

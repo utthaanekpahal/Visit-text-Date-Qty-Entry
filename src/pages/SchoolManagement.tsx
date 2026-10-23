@@ -189,7 +189,7 @@ export default function SchoolManagement() {
     return hindiSubjectNames[subjectName] ?? subjectName;
   };
 
-  const getBookName = (
+const getBookName = (
   bookName: string,
   mediumName: string
 ): string => {
@@ -197,9 +197,8 @@ export default function SchoolManagement() {
     return bookName;
   }
 
-  return hindiBookNames[bookName] ?? bookName;
+  return hindiBookNames[bookName.trim()] ?? bookName;
 };
-
 
   // Load saved subjects or use defaults
   const [subjects, setSubjects] = useState<Subject[]>(() => {
@@ -225,8 +224,23 @@ export default function SchoolManagement() {
   // Keep your existing code below this point.
 
 function normalizeSubjects(subjects: Subject[]): Subject[] {
-  return subjects;
+  return subjects.map((subject) => ({
+    ...subject,
+    mediums: subject.mediums.map((medium) => ({
+      ...medium,
+      books:
+        medium.name === "Hindi Medium"
+          ? medium.books.map((book) => ({
+              ...book,
+              name:
+                hindiBookNames[book.name.trim()] ??
+                book.name,
+            }))
+          : medium.books,
+    })),
+  }));
 }
+
 
 
   // =====================================================

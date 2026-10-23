@@ -3,19 +3,18 @@ import React from "react";
 import { FiTrash2 } from "react-icons/fi";
 import type { Subject, Book } from "../types";
 
+
 interface TableHeaderProps {
   subjects: Subject[];
-
-  // Selected Type
   selectedType: string;
-   
+
   setSubjects: React.Dispatch<
     React.SetStateAction<Subject[]>
   >;
 
   deleteSubject: (subjectName: string) => void;
 
-  deleteMedium: ( 
+  deleteMedium: (
     subjectName: string,
     mediumName: string
   ) => void;
@@ -25,7 +24,18 @@ interface TableHeaderProps {
     mediumName: string,
     bookId: number
   ) => void;
+
+  getBookName: (
+    bookName: string,
+    mediumName: string
+  ) => string;
+
+  getSubjectName: (
+    subjectName: string,
+    mediumName: string
+  ) => string;
 }
+
 
 export default function TableHeader({
   subjects,
@@ -33,8 +43,9 @@ export default function TableHeader({
   deleteSubject,
   deleteMedium,
   deleteBook,
+  getBookName,
+  
 }: TableHeaderProps) {
-
   // =====================================================
   // GET VISIBLE BOOKS
   // =====================================================
@@ -408,16 +419,16 @@ export default function TableHeader({
 
                       {/* Book Name */}
 
-                      <input
-                        value={book.name}
-                        onChange={(e) =>
-                          updateBookName(
-                            subject.name,
-                            medium.name,
-                            book.id,
-                            e.target.value
-                          )
-                        }
+                    <input
+  value={getBookName(book.name, medium.name)}
+  onChange={(e) =>
+    updateBookName(
+      subject.name,
+      medium.name,
+      book.id,
+      e.target.value
+    )
+  }
                         className="
                           w-24
                           bg-transparent
