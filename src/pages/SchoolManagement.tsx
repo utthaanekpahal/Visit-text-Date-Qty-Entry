@@ -151,30 +151,42 @@ export default function SchoolManagement() {
   };
 
   // Hindi book names
-  const hindiBookNames: Record<string, string> = {
-    Physics: "भौतिक विज्ञान",
-    Chemistry: "रसायन विज्ञान",
-    Biology: "जीव विज्ञान",
-    Mathematics: "गणित",
+ const hindiBookNames: Record<string, string> = {
+  // Existing English names
+  Physics: "भौतिक विज्ञान",
+  Chemistry: "रसायन विज्ञान",
+  Biology: "जीव विज्ञान",
+  Mathematics: "गणित",
 
-    "Business Studies": "व्यवसाय अध्ययन",
-    Accountancy: "लेखाशास्त्र",
-    Economics: "अर्थशास्त्र",
+  // Alternative names saved in your data
+  Bhautik: "भौतिक विज्ञान",
+  Rashayan: "रसायन विज्ञान",
+  Rasayan: "रसायन विज्ञान",
+  "Jeev Vigyan": "जीव विज्ञान",
+  Ganit: "गणित",
 
-    "Political Science": "राजनीति विज्ञान",
-    Geography: "भूगोल",
-    History: "इतिहास",
-    Sociology: "समाजशास्त्र",
+  // Commerce
+  "Business Studies": "व्यवसाय अध्ययन",
+  Accountancy: "लेखाशास्त्र",
+  Economics: "अर्थशास्त्र",
+  
 
-    Horticulture: "कृषि विज्ञान",
-    "Animal Husbandry": "पशु विज्ञान",
-    "Crop Production": "फसल विज्ञान",
+  // Arts
+  "Political Science": "राजनीति विज्ञान",
+  Geography: "भूगोल",
+  History: "इतिहास",
+  Sociology: "समाजशास्त्र",
 
-    Hindi: "हिंदी",
-    English: "अंग्रेज़ी",
-    Sanskrit: "संस्कृत",
-  };
+  // Agriculture
+  Horticulture: "कृषि विज्ञान",
+  "Animal Husbandry": "पशु विज्ञान",
+  "Crop Production": "फसल विज्ञान",
 
+  // Bharti
+  Hindi: "हिंदी",
+  English: "अंग्रेज़ी",
+  Sanskrit: "संस्कृत",
+};
   
 
   // Display subject name according to medium
@@ -193,11 +205,15 @@ const getBookName = (
   bookName: string,
   mediumName: string
 ): string => {
-  if (mediumName !== "Hindi Medium") {
+  if (mediumName.trim() !== "Hindi Medium") {
     return bookName;
   }
 
-  return hindiBookNames[bookName.trim()] ?? bookName;
+  const key = Object.keys(hindiBookNames).find(
+    (name) => name.toLowerCase() === bookName.trim().toLowerCase()
+  );
+
+  return hindiBookNames[key ?? ""] ?? bookName;
 };
 
   // Load saved subjects or use defaults
