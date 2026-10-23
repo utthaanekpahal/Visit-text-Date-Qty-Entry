@@ -175,6 +175,8 @@ export default function SchoolManagement() {
     Sanskrit: "संस्कृत",
   };
 
+  
+
   // Display subject name according to medium
   const getSubjectName = (
     subjectName: string,
@@ -187,17 +189,17 @@ export default function SchoolManagement() {
     return hindiSubjectNames[subjectName] ?? subjectName;
   };
 
-  // Display book name according to medium
   const getBookName = (
-    bookName: string,
-    mediumName: string
-  ): string => {
-    if (mediumName !== "Hindi Medium") {
-      return bookName;
-    }
+  bookName: string,
+  mediumName: string
+): string => {
+  if (mediumName !== "Hindi Medium") {
+    return bookName;
+  }
 
-    return hindiBookNames[bookName] ?? bookName;
-  };
+  return hindiBookNames[bookName] ?? bookName;
+};
+
 
   // Load saved subjects or use defaults
   const [subjects, setSubjects] = useState<Subject[]>(() => {

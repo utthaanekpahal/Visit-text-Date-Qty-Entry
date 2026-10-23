@@ -640,8 +640,7 @@ export default function SchoolTable({
     type,
   },
 ]);
-                    // IMPORTANT:
-                    // oldBooks + newBooks
+                   
                     updatedBooks[
                       grade
                     ][
@@ -852,10 +851,6 @@ export default function SchoolTable({
       })
     );
 
-    // =========================================
-    // REMOVE SAME BOOK INDEX
-    // FROM ALL FOUR TYPE BRANCHES
-    // =========================================
 
     if (bookIndex !== -1) {
       setSchools((prev) =>
@@ -991,7 +986,7 @@ export default function SchoolTable({
 
   // =====================================================
   // DELETE MEDIUM
-  // =====================================================
+  // ====================================================22
 
   const deleteMedium = (
     subjectName: string,
