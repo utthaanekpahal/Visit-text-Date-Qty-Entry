@@ -191,314 +191,211 @@ export default function TableHeader({
   // =====================================================
 
   return (
-    <thead className="sticky top-0 z-40 bg-gray-100">
+   <thead className="bg-gray-100">
 
-      {/* =================================================
-          ROW 1
-          Subject
-      ================================================= */}
+  {/* ROW 1: SUBJECT */}
+  <tr>
+    {/* ACTION */}
+    <th
+      rowSpan={4}
+      className="sticky left-0 top-0 z-[80] box-border
+        min-w-[50px] w-[50px]
+        border border-black bg-gray-100 p-2 text-center
+        shadow-[1px_0_0_#000,0_1px_0_#000]"
+    >
+      Action
+    </th>
 
-      <tr>
+    {/* S.NO */}
+    <th
+      rowSpan={4}
+      className="sticky left-[50px] top-0 z-[80] box-border
+        min-w-[70px] w-[70px]
+        border border-black bg-gray-100 p-2 text-center
+        shadow-[1px_0_0_#000,0_1px_0_#000]"
+    >
+      S.No
+    </th>
 
+    {/* SCHOOL CODE */}
+    <th
+      rowSpan={4}
+      className="sticky left-[120px] top-0 z-[80] box-border
+        min-w-[140px] w-[140px]
+        border border-black bg-gray-100 p-2 text-center
+        shadow-[1px_0_0_#000,0_1px_0_#000]"
+    >
+      School Code
+    </th>
+
+    {/* SCHOOL NAME */}
+    <th
+      rowSpan={4}
+      className="sticky left-[260px] top-0 z-[80] box-border
+        min-w-[250px] w-[250px]
+        border border-black bg-gray-100 p-2 text-center
+        shadow-[1px_0_0_#000,0_1px_0_#000]"
+    >
+      School Name
+    </th>
+
+    {/* CLASS */}
+    <th
+      rowSpan={4}
+      className="sticky left-[510px] top-0 z-[80] box-border
+        min-w-[80px] w-[80px]
+        border border-black bg-gray-100 p-2 text-center
+        shadow-[1px_0_0_#000,0_1px_0_#000]"
+    >
+      Class
+    </th>
+
+    {/* SUBJECT */}
+    {subjects.map((subject) => {
+      const visibleMediums = getVisibleMediums(subject);
+
+      const subjectColumnCount = visibleMediums.reduce(
+        (total, medium) => total + medium.books.length * 2,
+        0
+      );
+
+      if (subjectColumnCount === 0) return null;
+
+      return (
         <th
-          rowSpan={4}
-          className="border p-2"
+          key={subject.id}
+          colSpan={subjectColumnCount}
+        className="sticky top-0 z-[60] border border-black bg-gray-100 p-2 text-center"
         >
-          S.No
-        </th>
+          <div className="flex items-center justify-center gap-2">
+            <input
+              value={subject.name}
+              onChange={(e) =>
+                updateSubjectName(subject.name, e.target.value)
+              }
+              className="w-24 min-w-0 bg-transparent text-center outline-none"
+            />
 
-        <th
-          rowSpan={4}
-          className="border p-2 min-w-[150px]"
-        >
-          School Code
-        </th>
-
-        <th
-          rowSpan={4}
-          className="
-            sticky
-            left-0
-            z-30
-            min-w-[250px]
-            border
-            bg-gray-100
-            p-2
-          "
-        >
-          School Name
-        </th>
-
-        <th
-          rowSpan={4}
-          className="
-            min-w-[80px]
-            border
-            p-2
-          "
-        >
-          Class
-        </th>
-
-        {/* ================= SUBJECT ================= */}
-
-        {subjects.map((subject) => {
-
-          const visibleMediums =
-            getVisibleMediums(subject);
-
-          const subjectColumnCount =
-            visibleMediums.reduce(
-              (total, medium) =>
-                total +
-                medium.books.length * 2,
-              0
-            );
-
-          // Selected type change hone par subject
-          // remove nahi hoga.
-          if (subjectColumnCount === 0) {
-            return null;
-          }
-
-          return (
-            <th
-              key={subject.id}
-              colSpan={subjectColumnCount}
-              className="border p-2"
+            <button
+              type="button"
+              onClick={() => deleteSubject(subject.name)}
+              className="shrink-0 hover:scale-110"
             >
-
-              <div className="flex items-center justify-center gap-2">
-
-                {/* Subject Name */}
-
-                <input
-                  value={subject.name}
-                  onChange={(e) =>
-                    updateSubjectName(
-                      subject.name,
-                      e.target.value
-                    )
-                  }
-                  className="
-                    w-24
-                    bg-transparent
-                    text-center
-                    outline-none
-                  "
-                />
-
-                {/* Delete Subject */}
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    deleteSubject(
-                      subject.name
-                    )
-                  }
-                  className="hover:scale-110"
-                >
-                  <FiTrash2
-                    className="text-red-600"
-                  />
-                </button>
-
-              </div>
-
-            </th>
-          );
-        })}
-
-        {/* ================= REMARK ================= */}
-
-        <th
-          rowSpan={4}
-          className="
-            min-w-[180px]
-            border
-            p-2
-            bg-gray-100
-            text-center
-          "
-        >
-          Remark
+              <FiTrash2 className="text-red-600" />
+            </button>
+          </div>
         </th>
+      );
+    })}
 
-      </tr>
+    {/* REMARK */}
+    <th
+      rowSpan={4}
+      className="min-w-[180px] border border-black
+        bg-gray-100 p-2 text-center"
+    >
+      Remark
+    </th>
+  </tr>
 
-      {/* =================================================
-          ROW 2
-          Medium
-      ================================================= */}
-
-      <tr>
-
-        {subjects.map((subject) =>
-          getVisibleMediums(subject).map(
-            (medium) => {
-
-              const mediumColumnCount =
-                medium.books.length * 2;
-
-              return (
-                <th
-                  key={`${subject.id}-${medium.id}`}
-                  colSpan={mediumColumnCount}
-                  className="border p-2"
-                >
-
-                  <div className="flex justify-center gap-2">
-
-                    {/* Medium Name */}
-
-                    <input
-                      value={medium.name}
-                      onChange={(e) =>
-                        updateMediumName(
-                          subject.name,
-                          medium.name,
-                          e.target.value
-                        )
-                      }
-                      className="
-                        w-32
-                        bg-transparent
-                        text-center
-                        outline-none
-                      "
-                    />
-
-                    {/* Delete Medium */}
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        deleteMedium(
-                          subject.name,
-                          medium.name
-                        )
-                      }
-                      className="hover:scale-110"
-                    >
-                      <FiTrash2
-                        className="text-red-500"
-                      />
-                    </button>
-
-                  </div>
-
-                </th>
-              );
-            }
-          )
-        )}
-
-      </tr>
-
-      {/* =================================================
-          ROW 3
-          Book
-      ================================================= */}
-
-      <tr>
-
-        {subjects.map((subject) =>
-          getVisibleMediums(subject).map(
-            (medium) =>
-              medium.books.map(
-                (book: Book) => (
-
-                  <th
-                    key={book.id}
-                    colSpan={2}
-                    className="border p-2"
-                  >
-
-                    <div className="flex justify-center gap-2">
-
-                      {/* Book Name */}
-
-                    <input
-  value={getBookName(book.name, medium.name)}
-  onChange={(e) =>
-    updateBookName(
-      subject.name,
-      medium.name,
-      book.id,
-      e.target.value
-    )
-  }
-                        className="
-                          w-24
-                          bg-transparent
-                          text-center
-                          outline-none
-                        "
-                      />
-
-                      {/* Delete Book */}
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          deleteBook(
-                            subject.name,
-                            medium.name,
-                            book.id
-                          )
-                        }
-                        className="hover:scale-110"
-                      >
-                        <FiTrash2
-                          className="text-red-500"
-                        />
-                      </button>
-
-                    </div>
-
-                  </th>
-
+  {/* ROW 2: MEDIUM */}
+  <tr>
+    {subjects.map((subject) =>
+      getVisibleMediums(subject).map((medium) => (
+        <th
+          key={`${subject.id}-${medium.id}`}
+          colSpan={medium.books.length * 2}
+         className="sticky top-[40px] z-[60] border border-black bg-gray-100 p-2 text-center"
+        >
+          <div className="flex items-center justify-center gap-2">
+            <input
+              value={medium.name}
+              onChange={(e) =>
+                updateMediumName(
+                  subject.name,
+                  medium.name,
+                  e.target.value
                 )
-              )
-          )
-        )}
+              }
+              className="w-32 min-w-0 bg-transparent text-center outline-none"
+            />
 
-      </tr>
+            <button
+              type="button"
+              onClick={() =>
+                deleteMedium(subject.name, medium.name)
+              }
+              className="shrink-0 hover:scale-110"
+            >
+              <FiTrash2 className="text-red-500" />
+            </button>
+          </div>
+        </th>
+      ))
+    )}
+  </tr>
 
-      {/* =================================================
-          ROW 4
-          Date / Qty
-      ================================================= */}
+  {/* ROW 3: BOOK / SUB SUBJECT */}
+  <tr>
+    {subjects.map((subject) =>
+      getVisibleMediums(subject).map((medium) =>
+        medium.books.map((book: Book) => (
+          <th
+            key={`${subject.id}-${medium.id}-${book.id}`}
+            colSpan={2}
+            className="sticky top-[40px] z-[60] border border-black bg-gray-100 p-2 text-center"
+          >
+            <div className="flex items-center justify-center gap-2">
+              <input
+                value={getBookName(book.name, medium.name)}
+                onChange={(e) =>
+                  updateBookName(
+                    subject.name,
+                    medium.name,
+                    book.id,
+                    e.target.value
+                  )
+                }
+                className="w-24 min-w-0 bg-transparent text-center outline-none"
+              />
 
-      <tr>
+              <button
+                type="button"
+                onClick={() =>
+                  deleteBook(subject.name, medium.name, book.id)
+                }
+                className="shrink-0 hover:scale-110"
+              >
+                <FiTrash2 className="text-red-500" />
+              </button>
+            </div>
+          </th>
+        ))
+      )
+    )}
+  </tr>
 
-        {subjects.map((subject) =>
-          getVisibleMediums(subject).map(
-            (medium) =>
-              medium.books.map((book) => (
+  {/* ROW 4: DATE / QTY */}
+  <tr>
+    {subjects.map((subject) =>
+      getVisibleMediums(subject).map((medium) =>
+        medium.books.map((book) => (
+          <React.Fragment
+            key={`${subject.id}-${medium.id}-${book.id}`}
+          >
+            <th className="sticky top-[80px] z-[60] border border-black bg-gray-100 p-2 text-center">
+              Date
+            </th>
 
-                <React.Fragment
-                  key={`${subject.id}-${medium.id}-${book.id}`}
-                >
-
-                  <th className="border p-2">
-                    Date
-                  </th>
-
-                  <th className="border p-2">
-                    Qty
-                  </th>
-
-                </React.Fragment>
-
-              ))
-          )
-        )}
-
-      </tr>
-
-    </thead>
+            <th className="sticky top-[80px] z-[60] border border-black bg-gray-100 p-2 text-center">
+              Qty
+            </th>
+          </React.Fragment>
+        ))
+      )
+    )}
+  </tr>
+</thead>
   );
 }
 

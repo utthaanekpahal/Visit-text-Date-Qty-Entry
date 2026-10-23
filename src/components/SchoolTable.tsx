@@ -69,7 +69,7 @@ export default function SchoolTable({
 
   const [selectedType, setSelectedType] =
     useState("All");
-
+const [selectedSchools, setSelectedSchools] = useState<number[]>([]);
   const [selectedClass, setSelectedClass] =
     useState("All");
 
@@ -937,6 +937,27 @@ export default function SchoolTable({
     );
   };
 
+  const deleteSelectedSchools = () => {
+  if (selectedSchools.length === 0) {
+    alert("Please select at least one school.");
+    return;
+  }
+
+  const confirmed = window.confirm(
+    `Are you sure you want to delete ${selectedSchools.length} school(s)?`
+  );
+
+  if (!confirmed) return;
+
+  setSchools((prev) =>
+    prev.filter(
+      (school) => !selectedSchools.includes(school.id)
+    )
+  );
+
+  setSelectedSchools([]);
+};
+
   // =====================================================
   // DELETE SUBJECT
   // =====================================================
@@ -1155,158 +1176,121 @@ export default function SchoolTable({
 
   return (
     <div className="p-5">
-      <div className="flex justify-between items-center mb-5">
-        <input
-          type="text"
-          placeholder="Search School Code / School Name"
-          value={search}
-          onChange={(e) =>
-            setSearch(
-              e.target.value
-            )
-          }
-          className="border rounded px-3 py-2 w-80"
-        />
+    
+<div className="sticky top-0 z-[80] mb-5 rounded-lg border border-gray-300 bg-white p-4 shadow-md">
 
-        {/* SUBJECT FILTER */}
-        <select
-          value={selectedSubject}
-          onChange={(e) =>
-            setSelectedSubject(
-              e.target.value
-            )
-          }
-          className="border rounded px-3 py-2 ml-3"
-        >
-          <option value="All">
-            All Subjects
-          </option>
+  {/* SEARCH AND FILTERS */}
+  <div className="flex flex-wrap items-center gap-3">
 
-          {subjects.map(
-            (subject) => (
-              <option
-                key={subject.id}
-                value={subject.name}
-              >
-                {subject.name}
-              </option>
-            )
-          )}
-        </select>
+    <input
+      type="text"
+      placeholder="Search School Code / School Name"
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      className="h-10 w-full min-w-[220px] rounded border border-gray-300 px-3 sm:w-80"
+    />
 
-        {/* MEDIUM FILTER */}
-        <select
-          value={selectedMedium}
-          onChange={(e) =>
-            setSelectedMedium(
-              e.target.value
-            )
-          }
-          className="border rounded px-3 py-2 ml-3"
-        >
-          <option value="All">
-            All Mediums
-          </option>
+    {/* SUBJECT FILTER */}
+    <select
+      value={selectedSubject}
+      onChange={(e) => setSelectedSubject(e.target.value)}
+      className="h-10 min-w-[150px] rounded border border-gray-300 px-3"
+    >
+      <option value="All">All Subjects</option>
+      {subjects.map((subject) => (
+        <option key={subject.id} value={subject.name}>
+          {subject.name}
+        </option>
+      ))}
+    </select>
 
-          <option value="English Medium">
-            English Medium
-          </option>
+    {/* MEDIUM FILTER */}
+    <select
+      value={selectedMedium}
+      onChange={(e) => setSelectedMedium(e.target.value)}
+      className="h-10 min-w-[160px] rounded border border-gray-300 px-3"
+    >
+      <option value="All">All Mediums</option>
+      <option value="English Medium">English Medium</option>
+      <option value="Hindi Medium">Hindi Medium</option>
+    </select>
 
-          <option value="Hindi Medium">
-            Hindi Medium
-          </option>
-        </select>
+    {/* TYPE FILTER */}
+    <select
+      value={selectedType}
+      onChange={(e) => setSelectedType(e.target.value)}
+      className="h-10 min-w-[150px] rounded border border-gray-300 px-3"
+    >
+      <option value="All">All Types</option>
+      <option value="Textbook">Textbook</option>
+      <option value="Parikshabodh">Parikshabodh</option>
+      <option value="Practical">Practical</option>
+      <option value="Project">Project</option>
+      <option value="Guide">Guide</option>
+    </select>
 
-        {/* TYPE FILTER */}
-       <select
-  value={selectedType}
-  onChange={(e) => setSelectedType(e.target.value)}
-  className="border rounded px-3 py-2 ml-3"
->
-  <option value="All">
-    All Types
-  </option>
+    {/* CLASS FILTER */}
+    <select
+      value={selectedClass}
+      onChange={(e) => setSelectedClass(e.target.value)}
+      className="h-10 min-w-[130px] rounded border border-gray-300 px-3"
+    >
+      <option value="All">All Classes</option>
+      <option value="11">Class 11</option>
+      <option value="12">Class 12</option>
+    </select>
 
-  <option value="Textbook">
-    Textbook
-  </option>
+  </div>
 
-  <option value="Parikshabodh">
-    Parikshabodh
-  </option>
+  {/* ACTION BUTTONS */}
+  <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-gray-200 pt-4">
 
-  <option value="Practical">
-    Practical
-  </option>
+    <button
+      type="button"
+      onClick={addSchool}
+      className="rounded bg-pink-600 px-4 py-2 font-bold text-white hover:bg-pink-700"
+    >
+      + Add School
+    </button>
 
-  <option value="Project">
-    Project
-  </option>
+    <button
+      type="button"
+      onClick={addSubject}
+      className="rounded bg-pink-600 px-4 py-2 font-bold text-white hover:bg-pink-700"
+    >
+      + Add Subject
+    </button>
 
-  <option value="Guide">
-    Guide
-  </option>
-</select>
+    <ImportExcel
+      setSchools={setSchools}
+      subjects={subjects}
+      selectedType={activeType}
+    />
 
-        {/* CLASS FILTER */}
-        <select
-          value={selectedClass}
-          onChange={(e) =>
-            setSelectedClass(
-              e.target.value
-            )
-          }
-          className="border rounded px-3 py-2 ml-3"
-        >
-          <option value="All">
-            All Classes
-          </option>
+    <ExportExcel
+      schools={schools}
+      subjects={subjects}
+      selectedType={activeType}
+    />
 
-          <option value="11">
-            Class 11
-          </option>
+    <button
+      type="button"
+      disabled={selectedSchools.length === 0}
+      onClick={deleteSelectedSchools}
+      className="rounded bg-red-600 px-4 py-2 font-bold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      Delete Selected ({selectedSchools.length})
+    </button>
 
-          <option value="12">
-            Class 12
-          </option>
-        </select>
+  </div>
+</div>
 
-        {/* BUTTONS */}
-        <div className="flex gap-3">
-          <button
-            onClick={addSchool}
-            className="bg-pink-600 hover:bg-green-700 text-white px-4 py-2 rounded text-xl font-bold"
-          >
-            + Add School
-          </button>
-
-          <button
-            onClick={addSubject}
-            className="bg-pink-600 text-xl font-bold hover:bg-blue-700 text-white px-4 py-2 rounded"
-          >
-            + Add Subject
-          </button>
-
-          <ImportExcel
-  setSchools={setSchools}
-  subjects={subjects}
-  selectedType={activeType}
-/>
-
-          <ExportExcel
-  schools={schools}
-  subjects={subjects}
-  selectedType={activeType}
-/>
-        </div>
-      </div>
 
       {/* =====================================================
           TABLE
       ===================================================== */}
-
-      <div className="overflow-x-auto border rounded-lg relative">
-        <table className="border-collapse w-full">
+<div className="relative w-full max-h-[70vh] overflow-auto rounded-lg border border-gray-300">
+  <table className="min-w-[1800px] border-separate border-spacing-0">
       
 <TableHeader
   subjects={visibleSubjects}
@@ -1320,477 +1304,410 @@ export default function SchoolTable({
 />
 
 
-          <tbody>
-            {currentSchools.map(
-              (school, index) => (
-                <React.Fragment
-                  key={school.id}
-                >
-                  {visibleGrades.map(
-                    (
-                      grade,
-                      rowIndex
-                    ) => (
-                      <tr
-                        key={`${school.id}-${grade}`}
-                      >
-                        {/* S.NO */}
-                        {rowIndex ===
-                          0 && (
-                          <td
-                            rowSpan={
-                              visibleGrades.length
-                            }
-                            className="border p-2 text-center"
-                          >
-                            {indexOfFirst +
-                              index +
-                              1}
-                          </td>
-                        )}
+          
 
-                        {/* SCHOOL CODE */}
-                        {rowIndex ===
-                          0 && (
-                          <td
-                            rowSpan={
-                              visibleGrades.length
-                            }
-                            className="border p-2"
-                          >
-                            <input
-                              value={
-                                school.code ||
-                                ""
-                              }
-                              onChange={(
-                                e
-                              ) =>
-                                setSchools(
-                                  (
-                                    prev
-                                  ) =>
-                                    prev.map(
-                                      (
-                                        s
-                                      ) =>
-                                        s.id ===
-                                        school.id
-                                          ? {
-                                              ...s,
-                                              code:
-                                                e
-                                                  .target
-                                                  .value,
-                                            }
-                                          : s
-                                    )
-                                )
-                              }
-                              className="w-24 bg-transparent outline-none"
-                            />
-                          </td>
-                        )}
+<tbody>
+  {currentSchools.map((school, index) => (
+    <React.Fragment key={school.id}>
+      {visibleGrades.map((grade, rowIndex) => (
+        <tr key={`${school.id}-${grade}`} className="bg-white">
 
-                        {/* SCHOOL NAME */}
-                        {rowIndex ===
-                          0 && (
-                          <td
-                            rowSpan={
-                              visibleGrades.length
-                            }
-                            className="
-                              sticky
-                              left-0
-                              z-20
-                              border
-                              border-black
-                              border-r-2
-                              bg-white
-                              p-2
-                              min-w-[250px]
-                            "
-                          >
-                            <div className="flex items-center justify-between">
-                              <span>
-                                {
-                                  school.schoolName
-                                }
-                              </span>
+          {/* ACTION / SELECT */}
+        {rowIndex === 0 && (
+  <td
+    rowSpan={visibleGrades.length}
+    className="
+      sticky left-0 z-30
+      box-border
+      min-w-[50px] w-[50px]
+      border border-black
+      bg-white
+      p-0
+      text-center align-middle
+      [background-clip:padding-box]
+      shadow-[1px_0_0_#000]
+    "
+  >
+    <div className="flex h-full min-h-[60px] w-full items-center justify-center">
+      <input
+        type="checkbox"
+        className="m-0 h-4 w-4 cursor-pointer"
+        checked={selectedSchools.includes(school.id)}
+        onChange={(e) => {
+          setSelectedSchools((prev) =>
+            e.target.checked
+              ? [...new Set([...prev, school.id])]
+              : prev.filter((id) => id !== school.id)
+          );
+        }}
+      />
+    </div>
+  </td>
+)}
 
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  deleteSchool(
-                                    school.id
-                                  )
-                                }
-                              >
-                                <FiTrash2 className="text-red-600" />
-                              </button>
-                            </div>
-                          </td>
-                        )}
+          {/* S.NO */}
+          {rowIndex === 0 && (
+            <td
+              rowSpan={visibleGrades.length}
+              className="sticky left-[50px] z-30 box-border
+                min-w-[70px] w-[70px]
+                border border-black bg-white p-2 text-center
+                shadow-[1px_0_0_#000,0_1px_0_#000]"
+            >
+              {indexOfFirst + index + 1}
+            </td>
+          )}
 
-                        {/* CLASS */}
-                        <td className="border p-2 text-center">
-                          {grade}
-                        </td>
-
-                        {/* =================================================
-                            SUBJECT DATA
-                        ================================================= */}
-
-                        {visibleSubjects.map(
-                          (subject) =>
-                            subject.mediums.map(
-                              (medium) =>
-                                medium.books.map(
-                                  (
-                                    book,
-                                    bookIndex
-                                  ) => {
-                                    // =========================================
-                                    // IMPORTANT
-                                    // DO NOT FILTER BOOK BY TYPE
-                                    //
-                                    // Same book is shared by all 4 types.
-                                    // selectedType decides which DATA branch
-                                    // will be displayed/edited.
-                                    // =========================================
-
-                                    const rawBookEntries =
-                                      school
-                                        .books?.[
-                                        grade
-                                      ]?.[
-                                        subject
-                                          .name
-                                      ]?.[
-                                        medium
-                                          .name
-                                      ]?.[
-                                        activeType
-                                      ]?.[
-                                        bookIndex
-                                      ];
-
-                                    const bookEntries =
-                                      Array.isArray(
-                                        rawBookEntries
-                                      )
-                                        ? rawBookEntries
-                                        : [
-                                            {
-                                              date: "",
-                                              qty: "",
-                                              type:
-                                                activeType,
-                                            },
-                                          ];
-
-                                    return (
-                                      <React.Fragment
-                                        key={`${school.id}-${grade}-${subject.id}-${medium.id}-${book.id}`}
-                                      >
-                                        {/* ================= DATE ================= */}
-                                        <td className="border p-1 align-top">
-                                          <textarea
-                                            value={bookEntries
-                                              .map(
-                                                (
-                                                  entry: any
-                                                ) =>
-                                                  entry?.date ||
-                                                  ""
-                                              )
-                                              .join(
-                                                "\n"
-                                              )}
-                                            onChange={(
-                                              e
-                                            ) => {
-                                              handleTextareaChange(
-                                                school.id,
-                                                grade,
-                                                subject.name,
-                                                medium.name,
-                                                bookIndex,
-                                                "date",
-                                                e
-                                                  .target
-                                                  .value,
-                                                activeType
-                                              );
-
-                                              e.target.style.height =
-                                                "auto";
-
-                                              e.target.style.height = `${e.target.scrollHeight}px`;
-                                            }}
-                                            onFocus={(
-                                              e
-                                            ) => {
-                                              e.target.style.height =
-                                                "auto";
-
-                                              e.target.style.height = `${e.target.scrollHeight}px`;
-                                            }}
-                                            rows={1}
-                                            className="
-                                              w-full
-                                              min-w-[120px]
-                                              min-h-[24px]
-                                              resize-none
-                                              overflow-hidden
-                                              bg-transparent
-                                              outline-none
-                                              text-center
-                                              leading-6
-                                              text-xl
-                                              font-semibold
-                                              whitespace-pre-wrap
-                                              block
-                                            "
-                                          />
-                                        </td>
-
-                                        {/* ================= QTY ================= */}
-                                        <td className="border p-1 align-top">
-                                          <textarea
-                                            value={bookEntries
-                                              .map(
-                                                (
-                                                  entry: any
-                                                ) =>
-                                                  typeof entry ===
-                                                    "object" &&
-                                                  entry !==
-                                                    null
-                                                    ? entry.qty ||
-                                                      ""
-                                                    : ""
-                                              )
-                                              .join(
-                                                "\n"
-                                              )}
-                                            onChange={(
-                                              e
-                                            ) => {
-                                              handleTextareaChange(
-                                                school.id,
-                                                grade,
-                                                subject.name,
-                                                medium.name,
-                                                bookIndex,
-                                                "qty",
-                                                e
-                                                  .target
-                                                  .value,
-                                                activeType
-                                              );
-
-                                              e.target.style.height =
-                                                "auto";
-
-                                              e.target.style.height = `${e.target.scrollHeight}px`;
-                                            }}
-                                            onFocus={(
-                                              e
-                                            ) => {
-                                              e.target.style.height =
-                                                "auto";
-
-                                              e.target.style.height = `${e.target.scrollHeight}px`;
-                                            }}
-                                            rows={1}
-                                            className="
-                                              w-20
-                                              min-h-[24px]
-                                              resize-none
-                                              overflow-hidden
-                                              bg-transparent
-                                              outline-none
-                                              text-center
-                                              leading-6
-                                              whitespace-pre-wrap
-                                              block
-                                              font-semibold
-                                              text-xl
-                                            "
-                                          />
-                                        </td>
-                                      </React.Fragment>
-                                    );
-                                  }
-                                )
-                            )
-                        )}
-
-                        {/* ================= REMARK ================= */}
-
-                        <td className="border p-1 align-top min-w-[180px]">
-                          <textarea
-                            value={
-                              school.remarks?.[
-                                grade
-                              ] ?? ""
-                            }
-                            onChange={(e) =>
-                              setSchools(
-                                (prev) =>
-                                  prev.map(
-                                    (s) =>
-                                      s.id ===
-                                      school.id
-                                        ? {
-                                            ...s,
-                                            remarks:
-                                              {
-                                                ...s.remarks,
-                                                [grade]:
-                                                  e
-                                                    .target
-                                                    .value,
-                                              },
-                                          }
-                                        : s
-                                  )
-                              )
-                            }
-                            placeholder={`Remark for Class ${grade}`}
-                            rows={2}
-                            className="
-                              w-full
-                              min-h-[50px]
-                              resize-none
-                              overflow-hidden
-                              bg-transparent
-                              outline-none
-                              text-left
-                              leading-6
-                              text-xl
-                              font-semibold
-                            "
-                          />
-                        </td>
-                      </tr>
+          {/* SCHOOL CODE */}
+          {rowIndex === 0 && (
+            <td
+              rowSpan={visibleGrades.length}
+              className="sticky left-[120px] z-30 box-border
+                min-w-[140px] w-[140px]
+                border border-black bg-white p-2
+                shadow-[1px_0_0_#000,0_1px_0_#000]"
+            >
+              <input
+                value={school.code || ""}
+                onChange={(e) =>
+                  setSchools((prev) =>
+                    prev.map((s) =>
+                      s.id === school.id
+                        ? { ...s, code: e.target.value }
+                        : s
                     )
-                  )}
-                </React.Fragment>
-              )
-            )}
+                  )
+                }
+                className="w-full min-w-0 bg-transparent outline-none"
+              />
+            </td>
+          )}
 
-            {/* =====================================================
-                CLASS 11 GRAND TOTAL
-            ===================================================== */}
+          {/* SCHOOL NAME */}
+          {rowIndex === 0 && (
+            <td
+              rowSpan={visibleGrades.length}
+              className="sticky left-[260px] z-30 box-border
+                min-w-[250px] w-[250px]
+                border border-black bg-white p-2
+                shadow-[1px_0_0_#000,0_1px_0_#000]"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="min-w-0 break-words">
+                  {school.schoolName}
+                </span>
 
-            {(selectedClass ===
-              "All" ||
-              selectedClass ===
-                "11") && (
-              <tr className="font-bold bg-gray-100">
-                <td
-                  colSpan={4}
-                  className="border p-2 text-center"
+                <button
+                  type="button"
+                  onClick={() => deleteSchool(school.id)}
+                  className="shrink-0"
                 >
-                  CLASS 11 GRAND TOTAL
-                </td>
+                  <FiTrash2 className="text-red-600" />
+                </button>
+              </div>
+            </td>
+          )}
 
-                {visibleSubjects.map(
-                  (subject) =>
-                    subject.mediums.map(
-                      (medium) =>
-                        medium.books.map(
-                          (
-                            book,
-                            bookIndex
-                          ) => (
-                            <React.Fragment
-                              key={`grand-total-11-${subject.id}-${medium.id}-${book.id}`}
-                            >
-                              {/* DATE */}
-                              <td className="border p-2 text-center">
-                                Total
-                              </td>
+          {/* CLASS */}
+          <td
+            className="sticky left-[510px] z-30 box-border
+              min-w-[80px] w-[80px]
+              border border-black bg-white p-2 text-center
+              shadow-[1px_0_0_#000,0_1px_0_#000]"
+          >
+            {grade}
+          </td>
 
-                              {/* QTY */}
-                              <td className="border p-2 text-center font-bold">
-                                {getGrandTotalQty(
-                                  "11",
-                                  subject.name,
-                                  medium.name,
-                                  bookIndex,
-                                  activeType
-                                )}
-                              </td>
-                            </React.Fragment>
+          {/* SUBJECT DATA */}
+          {visibleSubjects.map((subject) =>
+            subject.mediums.map((medium) =>
+              medium.books.map((book, bookIndex) => {
+                const rawBookEntries =
+                  school.books?.[grade]?.[subject.name]?.[medium.name]?.[
+                    activeType
+                  ]?.[bookIndex];
+
+                const bookEntries = Array.isArray(rawBookEntries)
+                  ? rawBookEntries
+                  : [{ date: "", qty: "", type: activeType }];
+
+                return (
+                  <React.Fragment
+                    key={`${school.id}-${grade}-${subject.id}-${medium.id}-${book.id}`}
+                  >
+                    {/* DATE */}
+                    <td className="border border-black p-1 align-top">
+                      <textarea
+                        value={bookEntries
+                          .map((entry: any) => entry?.date || "")
+                          .join("\n")}
+                        onChange={(e) => {
+                          handleTextareaChange(
+                            school.id,
+                            grade,
+                            subject.name,
+                            medium.name,
+                            bookIndex,
+                            "date",
+                            e.target.value,
+                            activeType
+                          );
+
+                          e.target.style.height = "auto";
+                          e.target.style.height =
+                            `${e.target.scrollHeight}px`;
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.height = "auto";
+                          e.target.style.height =
+                            `${e.target.scrollHeight}px`;
+                        }}
+                        rows={1}
+                        className="block min-h-[24px] w-full min-w-[120px]
+                          resize-none overflow-hidden bg-transparent
+                          text-center text-xl font-semibold leading-6
+                          outline-none whitespace-pre-wrap"
+                      />
+                    </td>
+
+                    {/* QTY */}
+                    <td className="border border-black p-1 align-top">
+                      <textarea
+                        value={bookEntries
+                          .map((entry: any) =>
+                            typeof entry === "object" && entry !== null
+                              ? entry.qty || ""
+                              : ""
                           )
-                        )
-                    )
-                )}
+                          .join("\n")}
+                        onChange={(e) => {
+                          handleTextareaChange(
+                            school.id,
+                            grade,
+                            subject.name,
+                            medium.name,
+                            bookIndex,
+                            "qty",
+                            e.target.value,
+                            activeType
+                          );
 
-                <td className="border p-2 text-center">
-                  -
-                </td>
-              </tr>
-            )}
+                          e.target.style.height = "auto";
+                          e.target.style.height =
+                            `${e.target.scrollHeight}px`;
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.height = "auto";
+                          e.target.style.height =
+                            `${e.target.scrollHeight}px`;
+                        }}
+                        rows={1}
+                        className="block min-h-[24px] w-20 resize-none
+                          overflow-hidden bg-transparent text-center
+                          text-xl font-semibold leading-6 outline-none
+                          whitespace-pre-wrap"
+                      />
+                    </td>
+                  </React.Fragment>
+                );
+              })
+            )
+          )}
 
-            {/* =====================================================
-                CLASS 12 GRAND TOTAL
-            ===================================================== */}
+          {/* REMARK */}
+          <td className="min-w-[180px] border border-black p-1 align-top">
+            <textarea
+              value={school.remarks?.[grade] ?? ""}
+              onChange={(e) =>
+                setSchools((prev) =>
+                  prev.map((s) =>
+                    s.id === school.id
+                      ? {
+                          ...s,
+                          remarks: {
+                            ...s.remarks,
+                            [grade]: e.target.value,
+                          },
+                        }
+                      : s
+                  )
+                )
+              }
+              placeholder={`Remark for Class ${grade}`}
+              rows={2}
+              className="min-h-[50px] w-full resize-none overflow-hidden
+                bg-transparent text-left text-xl font-semibold
+                leading-6 outline-none"
+            />
+          </td>
+        </tr>
+      ))}
+    </React.Fragment>
+  ))}
 
-            {(selectedClass ===
-              "All" ||
-              selectedClass ===
-                "12") && (
-              <tr className="font-bold bg-gray-100">
-                <td
-                  colSpan={4}
-                  className="border p-2 text-center"
-                >
-                  CLASS 12 GRAND TOTAL
-                </td>
+  {/* CLASS 11 GRAND TOTAL */}
+  {/* ================= CLASS 11 GRAND TOTAL ================= */}
 
-                {visibleSubjects.map(
-                  (subject) =>
-                    subject.mediums.map(
-                      (medium) =>
-                        medium.books.map(
-                          (
-                            book,
-                            bookIndex
-                          ) => (
-                            <React.Fragment
-                              key={`grand-total-12-${subject.id}-${medium.id}-${book.id}`}
-                            >
-                              {/* DATE */}
-                              <td className="border p-2 text-center">
-                                Total
-                              </td>
+{(selectedClass === "All" || selectedClass === "11") && (
+  <tr className="bg-gray-100 font-bold">
 
-                              {/* QTY */}
-                              <td className="border p-2 text-center font-bold">
-                                {getGrandTotalQty(
-                                  "12",
-                                  subject.name,
-                                  medium.name,
-                                  bookIndex,
-                                  activeType
-                                )}
-                              </td>
-                            </React.Fragment>
-                          )
-                        )
-                    )
-                )}
+    {/* Checkbox column */}
+    <td
+      className="sticky left-0 z-30 box-border
+        w-[50px] min-w-[50px]
+        border border-black bg-gray-100 p-0
+        shadow-[1px_0_0_#000]"
+    />
 
-                <td className="border p-2 text-center">
-                  -
-                </td>
-              </tr>
-            )}
-          </tbody>
+    {/* S.No column */}
+    <td
+      className="sticky left-[50px] z-30 box-border
+        w-[70px] min-w-[70px]
+        border border-black bg-gray-100 p-0
+        shadow-[1px_0_0_#000]"
+    />
+
+    {/* School Code column */}
+    <td
+      className="sticky left-[120px] z-30 box-border
+        w-[140px] min-w-[140px]
+        border border-black bg-gray-100 p-0
+        shadow-[1px_0_0_#000]"
+    />
+
+    {/* School Name / Grand Total label */}
+    <td
+      className="sticky left-[260px] z-30 box-border
+        w-[250px] min-w-[250px]
+        border border-black bg-gray-100
+        p-2 text-center
+        shadow-[1px_0_0_#000]"
+    >
+      CLASS 11 GRAND TOTAL
+    </td>
+
+    {/* Class column */}
+    <td
+      className="sticky left-[510px] z-30 box-border
+        w-[80px] min-w-[80px]
+        border border-black bg-gray-100 p-0
+        shadow-[1px_0_0_#000]"
+    />
+
+    {/* Subject / Medium / Book totals */}
+    {visibleSubjects.map((subject) =>
+      subject.mediums.map((medium) =>
+        medium.books.map((book, bookIndex) => (
+          <React.Fragment
+            key={`grand-total-11-${subject.id}-${medium.id}-${book.id}`}
+          >
+            <td className="box-border border border-black bg-gray-100 p-2 text-center">
+              Total
+            </td>
+
+            <td className="box-border border border-black bg-gray-100 p-2 text-center">
+              {getGrandTotalQty(
+                "11",
+                subject.name,
+                medium.name,
+                bookIndex,
+                activeType
+              )}
+            </td>
+          </React.Fragment>
+        ))
+      )
+    )}
+
+    {/* Remark column */}
+    <td className="border border-black bg-gray-100 p-2 text-center">
+      -
+    </td>
+  </tr>
+)}
+
+{/* ================= CLASS 12 GRAND TOTAL ================= */}
+
+{(selectedClass === "All" || selectedClass === "12") && (
+  <tr className="bg-gray-100 font-bold">
+
+    {/* Checkbox column */}
+    <td
+      className="sticky left-0 z-30 box-border
+        w-[50px] min-w-[50px]
+        border border-black bg-gray-100 p-0
+        shadow-[1px_0_0_#000]"
+    />
+
+    {/* S.No column */}
+    <td
+      className="sticky left-[50px] z-30 box-border
+        w-[70px] min-w-[70px]
+        border border-black bg-gray-100 p-0
+        shadow-[1px_0_0_#000]"
+    />
+
+    {/* School Code column */}
+    <td
+      className="sticky left-[120px] z-30 box-border
+        w-[140px] min-w-[140px]
+        border border-black bg-gray-100 p-0
+        shadow-[1px_0_0_#000]"
+    />
+
+    {/* School Name / Grand Total label */}
+    <td
+      className="sticky left-[260px] z-30 box-border
+        w-[250px] min-w-[250px]
+        border border-black bg-gray-100
+        p-2 text-center
+        shadow-[1px_0_0_#000]"
+    >
+      CLASS 12 GRAND TOTAL
+    </td>
+
+    {/* Class column */}
+    <td
+      className="sticky left-[510px] z-30 box-border
+        w-[80px] min-w-[80px]
+        border border-black bg-gray-100 p-0
+        shadow-[1px_0_0_#000]"
+    />
+
+    {/* Subject / Medium / Book totals */}
+    {visibleSubjects.map((subject) =>
+      subject.mediums.map((medium) =>
+        medium.books.map((book, bookIndex) => (
+          <React.Fragment
+            key={`grand-total-12-${subject.id}-${medium.id}-${book.id}`}
+          >
+            <td className="box-border border border-black bg-gray-100 p-2 text-center">
+              Total
+            </td>
+
+            <td className="box-border border border-black bg-gray-100 p-2 text-center">
+              {getGrandTotalQty(
+                "12",
+                subject.name,
+                medium.name,
+                bookIndex,
+                activeType
+              )}
+            </td>
+          </React.Fragment>
+        ))
+      )
+    )}
+
+    {/* Remark column */}
+    <td className="border border-black bg-gray-100 p-2 text-center">
+      -
+    </td>
+  </tr>
+)}
+</tbody>
+
+
         </table>
 
         {/* =====================================================

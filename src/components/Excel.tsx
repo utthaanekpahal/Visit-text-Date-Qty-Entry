@@ -362,12 +362,11 @@ export function ExportExcel({
   // EXPORT
   // ===================================================
 
-
-
 const handleExport = (
-  exportType: "filled" | "empty",
+  exportType: "filled" | "empty" | "all",
   gradeFilter: "11" | "12" | "all" = "all"
 ) => {
+
   type ExportGrade = "11" | "12";
 
  const gradesToExport: ("11" | "12")[] =
@@ -451,12 +450,13 @@ const handleExport = (
     gradesToExport.forEach((grade) => {
       const filled = hasFilledData(school, grade);
 
-      if (
-        (exportType === "filled" && filled) ||
-        (exportType === "empty" && !filled)
-      ) {
-        exportedRecords.push({ school, grade });
-      }
+   if (
+  exportType === "all" ||
+  (exportType === "filled" && filled) ||
+  (exportType === "empty" && !filled)
+) {
+  exportedRecords.push({ school, grade });
+}
     });
   });
 
@@ -471,34 +471,33 @@ const handleExport = (
 
   // Filled export: only book columns with data.
   // Empty export: all available book columns.
-  const exportColumns =
-    exportType === "empty"
-      ? allColumns
-      : allColumns.filter(
-          ({ subject, medium, bookIndex }) =>
-            exportedRecords.some(({ school, grade }) => {
-              const date = getText(
-                school,
-                grade,
-                subject.name,
-                medium.name,
-                bookIndex,
-                "date"
-              );
+const exportColumns =
+  exportType === "empty" || exportType === "all"
+    ? allColumns
+    : allColumns.filter(
+        ({ subject, medium, bookIndex }) =>
+          exportedRecords.some(({ school, grade }) => {
+            const date = getText(
+              school,
+              grade,
+              subject.name,
+              medium.name,
+              bookIndex,
+              "date"
+            );
 
-              const qty = getText(
-                school,
-                grade,
-                subject.name,
-                medium.name,
-                bookIndex,
-                "qty"
-              );
+            const qty = getText(
+              school,
+              grade,
+              subject.name,
+              medium.name,
+              bookIndex,
+              "qty"
+            );
 
-              return date !== "" || qty !== "";
-            })
-        );
-
+            return date !== "" || qty !== "";
+          })
+      );
   // S.No | Code | School Name | Grade | Type
   const FIXED_COLUMNS = 5;
   const rows: any[][] = [];
@@ -948,6 +947,12 @@ worksheet["!rows"] = rows.map((row, rowIndex) => ({
       >
         Export Filled
       </button>
+
+<button onClick={() => handleExport("all", exportGrade)}
+   className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white shadow-lg hover:bg-green-700"
+  >
+  Export All
+</button>
 
     </div>
   );
