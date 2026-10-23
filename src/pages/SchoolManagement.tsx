@@ -151,41 +151,76 @@ export default function SchoolManagement() {
   };
 
   // Hindi book names
- const hindiBookNames: Record<string, string> = {
-  // Existing English names
+const hindiBookNames: Record<string, string> = {
+  // ================= SCIENCE =================
   Physics: "भौतिक विज्ञान",
-  Chemistry: "रसायन विज्ञान",
-  Biology: "जीव विज्ञान",
-  Mathematics: "गणित",
-
-  // Alternative names saved in your data
   Bhautik: "भौतिक विज्ञान",
+  Bhoutik: "भौतिक विज्ञान",
+
+  Chemistry: "रसायन विज्ञान",
   Rashayan: "रसायन विज्ञान",
   Rasayan: "रसायन विज्ञान",
+  "Rasayan Vigyan": "रसायन विज्ञान",
+
+  Biology: "जीव विज्ञान",
   "Jeev Vigyan": "जीव विज्ञान",
+  "Jiv Vigyan": "जीव विज्ञान",
+  JeevVigyan: "जीव विज्ञान",
+
+  Mathematics: "गणित",
+  Maths: "गणित",
   Ganit: "गणित",
+  Math: "गणित",
 
-  // Commerce
+  // ================= COMMERCE =================
   "Business Studies": "व्यवसाय अध्ययन",
+  Business: "व्यवसाय अध्ययन",
+  "Vyavsay Adhyayan": "व्यवसाय अध्ययन",
+
   Accountancy: "लेखाशास्त्र",
+  Accounts: "लेखाशास्त्र",
+  Lekhashastra: "लेखाशास्त्र",
+
   Economics: "अर्थशास्त्र",
+  Arthashastra: "अर्थशास्त्र",
+
   
-
-  // Arts
+  // ================= ARTS =================
   "Political Science": "राजनीति विज्ञान",
+  Politics: "राजनीति विज्ञान",
+  "Rajneeti Vigyan": "राजनीति विज्ञान",
+
   Geography: "भूगोल",
+  Bhugol: "भूगोल",
+
   History: "इतिहास",
+  Itihas: "इतिहास",
+
   Sociology: "समाजशास्त्र",
+  Samajshastra: "समाजशास्त्र",
 
-  // Agriculture
+  // ================= AGRICULTURE =================
   Horticulture: "कृषि विज्ञान",
-  "Animal Husbandry": "पशु विज्ञान",
-  "Crop Production": "फसल विज्ञान",
+  "Krishi Vigyan": "कृषि विज्ञान",
+  Krishi: "कृषि विज्ञान",
 
-  // Bharti
+  "Animal Husbandry": "पशु विज्ञान",
+  "Pashu Vigyan": "पशु विज्ञान",
+  "Pashu Palan": "पशुपालन",
+
+  "Crop Production": "फसल विज्ञान",
+  "Fasal Vigyan": "फसल विज्ञान",
+  "Fasal Utpadan": "फसल उत्पादन",
+
+  // ================= BHARTI =================
   Hindi: "हिंदी",
+  "Hindi Language": "हिंदी",
+
   English: "अंग्रेज़ी",
+  "English Language": "अंग्रेज़ी",
+
   Sanskrit: "संस्कृत",
+  Sanskritam: "संस्कृत",
 };
   
 
