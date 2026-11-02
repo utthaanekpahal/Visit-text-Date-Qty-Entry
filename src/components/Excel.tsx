@@ -325,8 +325,7 @@ export function ExportExcel({
       return "";
     }
 
-    // IMPORTANT:
-    // Only selectedType data is exported.
+    
     const data =
       mediumData[selectedType]?.[bookIndex];
 
@@ -511,7 +510,7 @@ const exportColumns =
     "S.No",
     "Code",
     "School Name",
-    "Grade",
+    "class",
     "Type",
   ];
 
@@ -615,92 +614,106 @@ const exportColumns =
   // DATA ROWS AND CLASS TOTALS
   // ------------------------------------------
 
-  let serialNo = 1;
+let serialNo = 1;
 
+schools.forEach((school) => {
   gradesToExport.forEach((grade) => {
-    const classRecords = exportedRecords.filter(
-      (record) => record.grade === grade
+    const record = exportedRecords.find(
+      (item) =>
+        item.school === school &&
+        item.grade === grade
     );
 
-    classRecords.forEach(({ school }) => {
-      const row: any[] = [
-        serialNo++,
-        school.code ?? "",
-        school.schoolName ?? "",
-        grade,
-        selectedType,
-      ];
+    // Skip records excluded by filled/empty filters
+    if (!record) return;
 
-      exportColumns.forEach(
-        ({ subject, medium, bookIndex }) => {
-          const date = getText(
-            school,
-            grade,
-            subject.name,
-            medium.name,
-            bookIndex,
-            "date"
-          );
+    const row: any[] = [
+      serialNo++,
+      school.code ?? "",
+      school.schoolName ?? "",
+      `Class ${grade}`,
+      selectedType,
+    ];
 
-          const qty = getText(
-            school,
-            grade,
-            subject.name,
-            medium.name,
-            bookIndex,
-            "qty"
-          );
+    exportColumns.forEach(
+      ({ subject, medium, bookIndex }) => {
+        const date = getText(
+          school,
+          grade,
+          subject.name,
+          medium.name,
+          bookIndex,
+          "date"
+        );
 
-          const numericQty =
-            qty !== "" && Number.isFinite(Number(qty))
-              ? Number(qty)
-              : qty;
+        const qty = getText(
+          school,
+          grade,
+          subject.name,
+          medium.name,
+          bookIndex,
+          "qty"
+        );
 
-          row.push(date, numericQty);
-        }
-      );
+        const numericQty =
+          qty !== "" && Number.isFinite(Number(qty))
+            ? Number(qty)
+            : qty;
 
-      row.push(getRemark(school, grade) ?? "");
-      rows.push(row);
-    });
+        row.push(date, numericQty);
+      }
+    );
 
-    // Separate total row for each class
-    if (classRecords.length > 0) {
-      const totalRow: any[] = [
-        "",
-        "",
-        `CLASS ${grade} TOTAL`,
-        grade,
-        selectedType,
-      ];
-
-      exportColumns.forEach(
-        ({ subject, medium, bookIndex }) => {
-          let totalQty = 0;
-
-          classRecords.forEach(({ school }) => {
-            const qty = getText(
-              school,
-              grade,
-              subject.name,
-              medium.name,
-              bookIndex,
-              "qty"
-            );
-
-            if (qty !== "" && Number.isFinite(Number(qty))) {
-              totalQty += Number(qty);
-            }
-          });
-
-          totalRow.push("Total", totalQty);
-        }
-      );
-
-      totalRow.push("");
-      rows.push(totalRow);
-    }
+    row.push(getRemark(school, grade) ?? "");
+    rows.push(row);
   });
+});
+
+// ------------------------------------------
+// CLASS-WISE TOTAL ROWS
+// ------------------------------------------
+
+gradesToExport.forEach((grade) => {
+  const classRecords = exportedRecords.filter(
+    (record) => record.grade === grade
+  );
+
+  if (classRecords.length === 0) return;
+
+  const totalRow: any[] = [
+    "",
+    "",
+    `CLASS ${grade} TOTAL`,
+    `Class ${grade}`,
+    selectedType,
+  ];
+
+  exportColumns.forEach(
+    ({ subject, medium, bookIndex }) => {
+      let totalQty = 0;
+
+      classRecords.forEach(({ school }) => {
+        const qty = getText(
+          school,
+          grade,
+          subject.name,
+          medium.name,
+          bookIndex,
+          "qty"
+        );
+
+        if (qty !== "" && Number.isFinite(Number(qty))) {
+          totalQty += Number(qty);
+        }
+      });
+
+      totalRow.push("Total", totalQty);
+    }
+  );
+
+  totalRow.push("");
+  rows.push(totalRow);
+});
 
   // ------------------------------------------
   // CREATE WORKSHEET

@@ -57,10 +57,8 @@ export default function SchoolTable({
   getSubjectName,
 }: SchoolTableProps) {
   const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const itemsPerPage = 5;
-
+ const [currentPage, setCurrentPage] = useState(1);
+const [itemsPerPage, setItemsPerPage] = useState(5);
   const [selectedSubject, setSelectedSubject] =
     useState("All");
 
@@ -72,6 +70,8 @@ export default function SchoolTable({
 const [selectedSchools, setSelectedSchools] = useState<number[]>([]);
   const [selectedClass, setSelectedClass] =
     useState("All");
+    const [editingCode, setEditingCode] = useState<number | null>(null);
+const [editingName, setEditingName] = useState<number | null>(null);
 
   React.useEffect(() => {
     if (
@@ -120,35 +120,22 @@ const [selectedSchools, setSelectedSchools] = useState<number[]>([]);
   // SEARCH
   // =====================================================
 
-  const searchText = search.trim().toLowerCase();
+const searchText = search.trim().toLowerCase();
 
-  const filteredSchools = schools.filter(
-    (school) => {
-      const code = (
-        school.code ?? ""
-      ).toLowerCase();
+const filteredSchools = schools.filter((school) => {
+  const code = String(school.code ?? "").toLowerCase();
+  const schoolName = String(school.schoolName ?? "").toLowerCase();
+  const grade = String(school.grade ?? "").toLowerCase();
 
-      const schoolName = (
-        school.schoolName ?? ""
-      ).toLowerCase();
+  const booksText = JSON.stringify(school.books ?? "").toLowerCase();
 
-      const grade = (
-        school.grade ?? ""
-      ).toLowerCase();
-
-      const booksText = JSON.stringify(
-        school.books ?? ""
-      ).toLowerCase();
-
-      return (
-        code.includes(searchText) ||
-        schoolName.includes(searchText) ||
-        grade.includes(searchText) ||
-        booksText.includes(searchText)
-      );
-    }
+  return (
+    code.includes(searchText) ||
+    schoolName.includes(searchText) ||
+    grade.includes(searchText) ||
+    booksText.includes(searchText)
   );
-
+});
   // =====================================================
   // PAGINATION
   // =====================================================
@@ -210,87 +197,69 @@ const [selectedSchools, setSelectedSchools] = useState<number[]>([]);
   // ADD SCHOOL
   // =====================================================
 
-  const addSchool = () => {
-    // =========================================
-    // SCHOOL CODE - OPTIONAL
-    // =========================================
 
-    const codeInput = prompt(
-      "Enter School Code (Optional)"
-    );
+const addSchool = () => {
+  // SCHOOL CODE - OPTIONAL
+  const codeInput = prompt("Enter School Code (Optional)");
+  const code = codeInput?.trim() || "";
 
-    const code =
-      codeInput?.trim() || "";
+  // SCHOOL NAME - REQUIRED
+  const schoolNameInput = prompt("Enter School Name");
 
-    // =========================================
-    // SCHOOL NAME - REQUIRED
-    // =========================================
+  if (!schoolNameInput?.trim()) {
+    alert("School name is required!");
+    return;
+  }
 
-    const schoolNameInput =
-      prompt("Enter School Name");
+  const schoolName = schoolNameInput.trim();
 
-    if (!schoolNameInput?.trim()) {
-      return;
-    }
+  // CHECK DUPLICATE SCHOOL NAME
+  const isDuplicate = schools.some(
+    (school) =>
+      school.schoolName.trim().toLowerCase() ===
+      schoolName.toLowerCase()
+  );
 
-    const schoolName =
-      schoolNameInput.trim();
+  if (isDuplicate) {
+    alert(`Warning: "${schoolName}" already exists!`);
+    return;
+  }
 
-    // =========================================
-    // CREATE BOOK DATA
-    // =========================================
+  // CREATE BOOK DATA
+  const books = {} as School["books"];
 
-    const books =
-      {} as School["books"];
+  (["11", "12"] as const).forEach((grade) => {
+    books[grade] = {};
 
-    (["11", "12"] as const).forEach(
-      (grade) => {
-        books[grade] = {};
+    subjects.forEach((subject) => {
+      books[grade][subject.name] = {};
 
-        subjects.forEach((subject) => {
-          books[grade][subject.name] =
-            {};
+      subject.mediums.forEach((medium) => {
+        books[grade][subject.name][medium.name] =
+          createTypeBooks(medium.books);
+      });
+    });
+  });
 
-          subject.mediums.forEach(
-            (medium) => {
-              books[grade][subject.name][
-                medium.name
-              ] = createTypeBooks(
-                medium.books
-              );
-            }
-          );
-        });
-      }
-    );
-
-    // =========================================
-    // CREATE NEW SCHOOL
-    // =========================================
-
-    const newSchool: School = {
-      id: Date.now(),
-      code,
-      schoolName,
-      grade: "11",
-
-      remarks: {
-        "11": "",
-        "12": "",
-      },
-
-      books,
-    };
-
-    // =========================================
-    // ADD SCHOOL
-    // =========================================
-
-    setSchools((prev) => [
-      ...prev,
-      newSchool,
-    ]);
+  // CREATE NEW SCHOOL
+  const newSchool: School = {
+    id: Date.now(),
+    code,
+    schoolName,
+    grade: "11",
+    remarks: {
+      "11": "",
+      "12": "",
+    },
+    books,
   };
+
+  // ADD SCHOOL
+  setSchools((prev) => [...prev, newSchool]);
+
+  alert(`School "${schoolName}" added successfully!`);
+};
+
 
   // =====================================================
   // ADD SUBJECT
@@ -1182,13 +1151,16 @@ const [selectedSchools, setSelectedSchools] = useState<number[]>([]);
   {/* SEARCH AND FILTERS */}
   <div className="flex flex-wrap items-center gap-3">
 
-    <input
-      type="text"
-      placeholder="Search School Code / School Name"
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-      className="h-10 w-full min-w-[220px] rounded border border-gray-300 px-3 sm:w-80"
-    />
+  <input
+  type="text"
+  value={search}
+  onChange={(e) => {
+    setSearch(e.target.value);
+    setCurrentPage(1);
+  }}
+  placeholder="Search school name or code..."
+className="w-95 rounded-md border px-5 py-2"
+/>
 
     {/* SUBJECT FILTER */}
     <select
@@ -1279,7 +1251,7 @@ const [selectedSchools, setSelectedSchools] = useState<number[]>([]);
       onClick={deleteSelectedSchools}
       className="rounded bg-red-600 px-4 py-2 font-bold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
     >
-      Delete Selected ({selectedSchools.length})
+      Delete Selected School({selectedSchools.length})
     </button>
 
   </div>
@@ -1360,54 +1332,98 @@ const [selectedSchools, setSelectedSchools] = useState<number[]>([]);
 
           {/* SCHOOL CODE */}
           {rowIndex === 0 && (
-            <td
-              rowSpan={visibleGrades.length}
-              className="sticky left-[120px] z-30 box-border
-                min-w-[140px] w-[140px]
-                border border-black bg-white p-2
-                shadow-[1px_0_0_#000,0_1px_0_#000]"
-            >
-              <input
-                value={school.code || ""}
-                onChange={(e) =>
-                  setSchools((prev) =>
-                    prev.map((s) =>
-                      s.id === school.id
-                        ? { ...s, code: e.target.value }
-                        : s
-                    )
-                  )
-                }
-                className="w-full min-w-0 bg-transparent outline-none"
-              />
-            </td>
-          )}
+  <td
+    rowSpan={visibleGrades.length}
+    className="sticky left-[120px] z-30 box-border
+      min-w-[140px] w-[140px]
+      border border-black bg-white p-2
+      shadow-[1px_0_0_#000,0_1px_0_#000]"
+  >
+    {editingCode === school.id ? (
+      <input
+        autoFocus
+        value={school.code || ""}
+        onChange={(e) =>
+          setSchools((prev) =>
+            prev.map((s) =>
+              s.id === school.id
+                ? { ...s, code: e.target.value }
+                : s
+            )
+          )
+        }
+        onBlur={() => setEditingCode(null)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            setEditingCode(null);
+          }
+        }}
+        className="w-full min-w-0 rounded border border-blue-500 px-1 outline-none"
+      />
+    ) : (
+      <div
+        onClick={() => setEditingCode(school.id)}
+        className="min-h-6 w-full cursor-text break-words"
+        title="Click to edit school code"
+      >
+        {school.code || "Click to add code"}
+      </div>
+    )}
+  </td>
+)}
 
           {/* SCHOOL NAME */}
-          {rowIndex === 0 && (
-            <td
-              rowSpan={visibleGrades.length}
-              className="sticky left-[260px] z-30 box-border
-                min-w-[250px] w-[250px]
-                border border-black bg-white p-2
-                shadow-[1px_0_0_#000,0_1px_0_#000]"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="min-w-0 break-words">
-                  {school.schoolName}
-                </span>
+         {rowIndex === 0 && (
+  <td
+    rowSpan={visibleGrades.length}
+    className="sticky left-[260px] z-30 box-border
+      min-w-[250px] w-[250px]
+      border border-black bg-white p-2
+      shadow-[1px_0_0_#000,0_1px_0_#000]"
+  >
+    <div className="flex items-start justify-between gap-2">
+      {editingName === school.id ? (
+        <input
+          autoFocus
+          value={school.schoolName || ""}
+          onChange={(e) =>
+            setSchools((prev) =>
+              prev.map((s) =>
+                s.id === school.id
+                  ? { ...s, schoolName: e.target.value }
+                  : s
+              )
+            )
+          }
+          onBlur={() => setEditingName(null)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              setEditingName(null);
+            }
+          }}
+          className="min-w-0 flex-1 rounded border border-blue-500 px-1 outline-none"
+        />
+      ) : (
+        <span
+          onClick={() => setEditingName(school.id)}
+          className="min-w-0 flex-1 cursor-text break-words"
+          title="Click to edit school name"
+        >
+          {school.schoolName || "Click to add name"}
+        </span>
+      )}
 
-                <button
-                  type="button"
-                  onClick={() => deleteSchool(school.id)}
-                  className="shrink-0"
-                >
-                  <FiTrash2 className="text-red-600" />
-                </button>
-              </div>
-            </td>
-          )}
-
+      <button
+        type="button"
+        onClick={() => deleteSchool(school.id)}
+        className="shrink-0"
+        title="Delete school"
+      >
+        <FiTrash2 className="text-red-600" />
+      </button>
+    </div>
+  </td>
+)}
           {/* CLASS */}
           <td
             className="sticky left-[510px] z-30 box-border
@@ -1709,19 +1725,19 @@ const [selectedSchools, setSelectedSchools] = useState<number[]>([]);
 
 
         </table>
+        
 
         {/* =====================================================
             PAGINATION
         ===================================================== */}
+<Pagination
+  currentPage={currentPage}
+  totalItems={filteredSchools.length}
+  itemsPerPage={itemsPerPage}
+  onPageChange={setCurrentPage}
+  onItemsPerPageChange={setItemsPerPage}
+/>
 
-        <Pagination
-          currentPage={currentPage}
-          totalItems={
-            filteredSchools.length
-          }
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-        />
       </div>
     </div>
   );
