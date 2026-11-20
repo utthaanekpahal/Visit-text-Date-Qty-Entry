@@ -1,8 +1,23 @@
 import { useEffect, useState } from "react";
 import SchoolTable from "../components/SchoolTable";
-import type { Subject, School, BookType } from "../types.ts";
+import type { Subject, School, BookType } from "../types";
 
-export default function SchoolManagement() {
+interface SelectedLocation {
+  state: string;
+  division: string;
+  area: string;
+  agent: string;
+  schoolType?: string;
+}
+
+interface SchoolManagementProps {
+  selectedLocation: SelectedLocation;
+}
+
+export default function SchoolManagement({
+  selectedLocation,
+}: SchoolManagementProps) {
+
   const BOOK_TYPES: BookType[] = [
     "Textbook",
     "Parikshabodh",
@@ -10,6 +25,22 @@ export default function SchoolManagement() {
     "Project",
     "Guide",
   ];
+  
+
+  // LOCATION-WISE STORAGE
+  const storageScope = encodeURIComponent(
+    [
+      selectedLocation.state,
+      selectedLocation.division,
+      selectedLocation.area,
+      selectedLocation.agent,
+      selectedLocation.schoolType || "Primary",
+    ].join("__")
+  );
+
+  const getStorageKey = (key: string) => {
+    return `${key}_${storageScope}`;
+  };
 
   // Default subjects and books
   const defaultSubjects: Subject[] = [
@@ -253,7 +284,9 @@ const getBookName = (
 
   // Load saved subjects or use defaults
   const [subjects, setSubjects] = useState<Subject[]>(() => {
-    const savedSubjects = localStorage.getItem("subjects");
+    const savedSubjects = localStorage.getItem(
+  getStorageKey("subjects")
+);
 
     if (savedSubjects) {
       try {
@@ -298,12 +331,12 @@ function normalizeSubjects(subjects: Subject[]): Subject[] {
   // SAVE SUBJECTS
   // =====================================================
 
-  useEffect(() => {
-    localStorage.setItem(
-      "subjects",
-      JSON.stringify(subjects)
-    );
-  }, [subjects]);
+ useEffect(() => {
+  localStorage.setItem(
+    getStorageKey("subjects"),
+    JSON.stringify(subjects)
+  );
+}, [subjects, storageScope]);
 
   // =====================================================
   // CREATE EMPTY BOOK ENTRY
@@ -499,8 +532,10 @@ function normalizeSubjects(subjects: Subject[]): Subject[] {
   // =====================================================
 
   const [schools, setSchools] = useState<School[]>(() => {
-    const savedSchools =
-      localStorage.getItem("schools");
+
+const savedSchools = localStorage.getItem(
+  getStorageKey("schools")
+);
 
     if (savedSchools) {
       try {
@@ -533,13 +568,12 @@ function normalizeSubjects(subjects: Subject[]): Subject[] {
   // =====================================================
   // SAVE SCHOOLS
   // =====================================================
-
-  useEffect(() => {
-    localStorage.setItem(
-      "schools",
-      JSON.stringify(schools)
-    );
-  }, [schools]);
+useEffect(() => {
+  localStorage.setItem(
+    getStorageKey("schools"),
+    JSON.stringify(schools)
+  );
+}, [schools, storageScope]);
 
   
   
@@ -670,6 +704,7 @@ function normalizeSubjects(subjects: Subject[]): Subject[] {
   handleInputChange={handleInputChange}
   getBookName={getBookName}
   getSubjectName={getSubjectName}
+    selectedLocation={selectedLocation}
 />
   );
 }

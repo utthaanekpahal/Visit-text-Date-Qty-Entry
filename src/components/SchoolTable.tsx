@@ -12,32 +12,44 @@ import type {
 import { FiTrash2 } from "react-icons/fi";
 import Pagination from "./Pagination";
 
+interface SelectedLocation {
+  state: string;
+  division: string;
+  area: string;
+  agent: string;
+  schoolType?: string;
+}
+
 interface SchoolTableProps {
   subjects: Subject[];
   schools: School[];
+
   setSchools: React.Dispatch<React.SetStateAction<School[]>>;
   setSubjects: React.Dispatch<React.SetStateAction<Subject[]>>;
-handleInputChange: (
-  schoolId: number,
-  grade: string,
-  subjectName: string,
-  mediumName: string,
-  bookIndex: number,
-  entryIndex: number,
-  field: "date" | "qty",
-  value: string,
-  type: BookType
-) => void;
 
-getBookName: (
-  bookName: string,
-  mediumName: string
-) => string;
+  selectedLocation: SelectedLocation;
 
-getSubjectName: (
-  subjectName: string,
-  mediumName: string
-) => string;
+  handleInputChange: (
+    schoolId: number,
+    grade: string,
+    subjectName: string,
+    mediumName: string,
+    bookIndex: number,
+    entryIndex: number,
+    field: "date" | "qty",
+    value: string,
+    type: BookType
+  ) => void;
+
+  getBookName: (
+    bookName: string,
+    mediumName: string
+  ) => string;
+
+  getSubjectName: (
+    subjectName: string,
+    mediumName: string
+  ) => string;
 }
 
 const BOOK_TYPES: BookType[] = [
@@ -55,6 +67,7 @@ export default function SchoolTable({
   handleInputChange,
   getBookName,
   getSubjectName,
+  selectedLocation,
 }: SchoolTableProps) {
   const [search, setSearch] = useState("");
  const [currentPage, setCurrentPage] = useState(1);
@@ -1144,7 +1157,42 @@ const addSchool = () => {
   // =====================================================
 
   return (
-    <div className="p-5">
+
+  <div className="p-5">
+
+    
+<div className="mt-2 mb-2 flex flex-wrap items-center gap-20 text-xl">
+
+  <span className=" text-black font-bold">
+    State:
+    <b className="ml-1 text-black">
+      {selectedLocation?.state || "Not Selected"}
+    </b>
+  </span>
+
+  <span className=" text-black font-bold">
+    Division:
+    <b className="ml-1 text-black">
+      {selectedLocation?.division || "Not Selected"}
+    </b>
+  </span>
+
+  <span className=" text-black font-bold">
+    Area:
+    <b className="ml-1 text-black font-bold">
+      {selectedLocation?.area || "Not Selected"}
+    </b>
+  </span>
+
+  <span className=" text-black font-bold">
+    Agent:
+    <b className="ml-1 text-black">
+      {selectedLocation?.agent || "Not Selected"}
+    </b>
+  </span>
+
+</div>
+                
     
 <div className="sticky top-0 z-[80] mb-5 rounded-lg border border-gray-300 bg-white p-4 shadow-md">
 
@@ -1238,12 +1286,12 @@ className="w-95 rounded-md border px-5 py-2"
       subjects={subjects}
       selectedType={activeType}
     />
-
-    <ExportExcel
-      schools={schools}
-      subjects={subjects}
-      selectedType={activeType}
-    />
+<ExportExcel
+  schools={schools}
+  subjects={subjects}
+  selectedType={activeType}
+  selectedLocation={selectedLocation}
+/>
 
     <button
       type="button"
@@ -1737,8 +1785,9 @@ className="w-95 rounded-md border px-5 py-2"
   onPageChange={setCurrentPage}
   onItemsPerPageChange={setItemsPerPage}
 />
-
       </div>
-    </div>
-  );
+  
+
+</div>
+);
 }
