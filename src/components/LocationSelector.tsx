@@ -18,10 +18,6 @@ interface LocationSelectorProps {
   onContinue: (location: SelectedLocation) => void;
 }
 
-interface DivisionData {
-  areas: string[];
-  agents: string[];
-}
 
 // ==============================
 // COMPONENT
